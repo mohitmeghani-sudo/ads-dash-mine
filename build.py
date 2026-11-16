@@ -617,6 +617,9 @@ def load_tables():
 
 
 def main():
+    if CLIENT.get("platform") == "meta":  # Meta Ads clients have their own source and page
+        import meta_build
+        return meta_build.main(CLIENT_KEY, CLIENT, DIST)
     x, api_data = load_tables()
     rc, pc = tab(x, "RSA Combinations"), tab(x, "PMax Combinations")
     for name, df in (("RSA Combinations", rc), ("PMax Combinations", pc)):

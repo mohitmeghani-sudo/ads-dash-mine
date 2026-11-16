@@ -47,6 +47,15 @@
       "9557969390"
     ]
   },
+  "soteri_meta": {
+    "name": "Soteri Skin (Meta)",
+    "platform": "meta",
+    "slug": "soteri-meta",
+    "domain": "soteriskin.com",
+    "meta_ad_account_id": "",
+    "meta_result": "purchase",
+    "meta_targets": {}
+  },
   "gd": {
     "name": "42 North Dental",
     "domain": "",

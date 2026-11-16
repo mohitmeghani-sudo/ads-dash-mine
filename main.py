@@ -101,6 +101,7 @@ class Site:
                 env = {**os.environ, "DIST_ROOT": str(DIST_ROOT)}
                 if self.force:
                     env["GADS_FORCE"] = "1"
+                    env["META_FORCE"] = "1"
                 p = subprocess.run([sys.executable, str(ROOT / "build.py"), self.key], cwd=str(ROOT), env=env,
                                    capture_output=True, text=True, encoding="utf-8", errors="replace",
                                    timeout=BUILD_TIMEOUT)
@@ -112,7 +113,11 @@ class Site:
             else:
                 if self.force:
                     gads_api.FORCE.set()
-                build.main()
+                    os.environ["META_FORCE"] = "1"
+                try:
+                    build.main()
+                finally:
+                    os.environ.pop("META_FORCE", None)
             self.status["last_ok"], self.status["last_error"] = datetime.now().isoformat(timespec="seconds"), None
         except BaseException as e:  # keep serving the last good build
             self.status["last_error"] = f"{type(e).__name__}: {e}"
