@@ -45,6 +45,34 @@ from pathlib import Path
 import build
 import gads_api
 import comments
+import meta_api
+
+_merge_lock = threading.Lock()
+_preview_cache = {}  # (ad id, format) -> (time, iframe src); Meta preview links stay valid for a while, 20 min is safe
+
+
+def _merges_file(key):
+    return comments.DATA_DIR / f"merges_{key}.json"
+
+
+def load_merges(key):
+    try:
+        return json.loads(_merges_file(key).read_text(encoding="utf-8")).get("merges", [])
+    except (OSError, ValueError):
+        return []
+
+
+def clean_merges(raw):
+    """Validate what the page sends: a list of {id, name, ads:[ad ids]}; anything else is dropped."""
+    out = []
+    for g in (raw if isinstance(raw, list) else [])[:300]:
+        if not isinstance(g, dict):
+            continue
+        ads = [str(a) for a in (g.get("ads") or []) if str(a).isdigit() and len(str(a)) <= 25][:500]
+        gid = str(g.get("id") or "")[:40]
+        if gid and len(ads) >= 2:
+            out.append({"id": gid, "name": str(g.get("name") or "Merged creative")[:120], "ads": ads})
+    return out
 
 ROOT = Path(__file__).parent
 PORT = int(os.environ.get("PORT", "8000"))
@@ -314,6 +342,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             site.rebuild_now.set()
             wake.set()
             return self._send(202, refresh_page(site.prefix), "text/html; charset=utf-8")
+        if self.path.startswith("/api/merges"):
+            return self._json(200, {"merges": load_merges(site.key), "persistent": comments.PERSISTENT})
+        if self.path.startswith("/api/preview"):
+            return self._preview()
         if self.path.startswith("/api/summary"):
             return self._summary()
         if self.path.startswith("/api/comments"):
@@ -345,6 +377,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_header("WWW-Authenticate", 'Basic realm="Ad Previews"')
             self.end_headers()
             return
+        if self.path.startswith("/api/merges"):
+            return self._save_merges()
         if not (COMMENTS and self.path.startswith("/api/comments")):
             return self._json(404, {"error": "Not found."})
         try:
@@ -359,6 +393,38 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if error:
             return self._json(400, {"error": error})
         self._json(201, {"comments": comments.list_for(site.key, ad_id)})
+
+    def _save_merges(self):
+        """The team's manual "merge insights" groups, shared by everyone who opens this dashboard."""
+        try:
+            size = int(self.headers.get("Content-Length") or 0)
+            if size > 262144:
+                return self._json(413, {"error": "Too many merged groups."})
+            body = json.loads(self.rfile.read(size) or b"{}")
+        except (ValueError, json.JSONDecodeError):
+            return self._json(400, {"error": "Couldn't read the merge list."})
+        merges = clean_merges(body.get("merges"))
+        try:
+            with _merge_lock:
+                comments.DATA_DIR.mkdir(parents=True, exist_ok=True)
+                _merges_file(self.site.key).write_text(json.dumps({"merges": merges}), encoding="utf-8")
+        except OSError as e:
+            return self._json(500, {"error": f"Couldn't save ({e.__class__.__name__})."})
+        self._json(200, {"merges": merges, "persistent": comments.PERSISTENT})
+
+    def _preview(self):
+        """/api/preview?ad=<id>&format=<MOBILE_FEED_STANDARD|...> -> {"src": iframe address}. Live Meta preview, also for catalog ads."""
+        q = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        ad, fmt = q.get("ad", [""])[0], q.get("format", ["MOBILE_FEED_STANDARD"])[0]
+        hit = _preview_cache.get((ad, fmt))
+        if hit and time.time() - hit[0] < 1200:
+            return self._json(200, {"src": hit[1]})
+        try:
+            src = meta_api.preview_src(ad, fmt)
+        except Exception as e:  # Meta's message is useful to the user ("no preview for this format")
+            return self._json(502, {"error": str(e)[:300]})
+        _preview_cache[(ad, fmt)] = (time.time(), src)
+        self._json(200, {"src": src})
 
     def _delete_comments(self):
         try:

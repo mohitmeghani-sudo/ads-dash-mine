@@ -66,6 +66,9 @@ def main(key, client, dist):
         "account": data["account"], "dateRange": data.get("dateRange", ""),
         "pulledAt": data["pulledAt"], "builtAt": datetime.now().strftime("%Y-%m-%d %H:%M"),
         "targets": client.get("meta_targets", {}),  # optional: {"cpa": 40, "roas": 2.5, "hookRate": 0.25}
+        # naming rules the page uses to group ads into creatives / creators (see clients.json)
+        "config": {"creators": client.get("meta_creators", []), "skus": client.get("meta_skus", []),
+                   "overrides": client.get("meta_overrides", {})},
         "ads": ads, "daily": data.get("daily", []),
     }
     template = (ROOT / "dashboard" / "meta_template.html").read_text(encoding="utf-8").replace("__CLIENT__", client["name"])

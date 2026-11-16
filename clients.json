@@ -54,7 +54,12 @@
     "domain": "soteriskin.com",
     "meta_ad_account_id": "",
     "meta_result": "purchase",
-    "meta_targets": {}
+    "meta_date_preset": "last_90d",
+    "meta_targets": {},
+    "meta_creators": ["@sheyanne", "@heather_aboff", "@princessdianaventura=princessdiana", "@carly_ciam=carlyciam", "@alliebast", "@jordanromerooo",
+                      "@spritz.of.krys", "@caitlynmillz", "@simplyyraii=simplyrai", "@eminemilee", "@pavlovaekateryna", "@baileymills", "@arletytv"],
+    "meta_skus": ["Baby", "All", "LongTerm", "ReliefKit", "ActiveFlare"],
+    "meta_overrides": {}
   },
   "gd": {
     "name": "42 North Dental",

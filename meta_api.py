@@ -26,7 +26,7 @@ ROOT = Path(__file__).parent
 VERSION = os.environ.get("META_API_VERSION", "v23.0")
 GRAPH = f"https://graph.facebook.com/{VERSION}"
 DATE_PRESET = "last_30d"
-CACHE_VERSION = 1
+CACHE_VERSION = 2
 CACHE_HOURS = float(os.environ.get("META_CACHE_HOURS", "3"))
 _VOLUME = os.environ.get("RAILWAY_VOLUME_MOUNT_PATH")
 CACHE_DIR = Path(os.environ.get("META_CACHE_DIR") or (Path(_VOLUME) / "meta_cache" if _VOLUME else ROOT / "cache"))
@@ -154,6 +154,8 @@ def parse_insights(row, result_kind):
     return {
         "spend": spend, "impr": impr, "reach": _n(row.get("reach")), "clicks": _n(row.get("clicks")),
         "linkClicks": _n(row.get("inline_link_clicks")), "results": results, "value": value,
+        "purchases": _action(actions, *PURCHASE),  # always purchases, whatever meta_result is
+        "engagement": _action(actions, "post_engagement"),  # reactions + comments + shares + saves + link clicks etc.
         "plays3s": _action(actions, "video_view"),  # Meta's "3-second video plays"
         "avgWatch": _action(row.get("video_avg_time_watched_actions"), "video_view"),  # seconds
         **video,
@@ -218,11 +220,54 @@ def video_info(api, video_ids):
     return out
 
 
+def creative_thumbs(api, creative_ids, px=720):
+    """creative id -> a sharper thumbnail. The default thumbnail_url is ~64px, which is why catalog ads looked blurry."""
+    out, ids = {}, sorted(set(i for i in creative_ids if i))
+    for i in range(0, len(ids), 40):
+        chunk = ids[i:i + 40]
+        try:
+            res = api.get("", {"ids": ",".join(chunk), "fields": "thumbnail_url",
+                               "thumbnail_width": px, "thumbnail_height": px})
+        except RuntimeError as e:
+            print(f"! hi-res thumbnails skipped for {len(chunk)} creatives ({e})")
+            continue
+        for cid, v in res.items():
+            if isinstance(v, dict) and v.get("thumbnail_url"):
+                out[cid] = v["thumbnail_url"]
+    return out
+
+
+PREVIEW_FORMATS = ("MOBILE_FEED_STANDARD", "DESKTOP_FEED_STANDARD", "INSTAGRAM_STANDARD", "INSTAGRAM_STORY",
+                   "FACEBOOK_REELS_MOBILE", "INSTAGRAM_REELS")
+
+
+def preview_src(ad_id, ad_format):
+    """Live Meta preview for one ad (works for catalog / dynamic ads too): the src of the iframe Meta returns.
+    Called on demand by the server (/api/preview); the access token never reaches the browser."""
+    creds = _creds()
+    if not creds:
+        raise RuntimeError("Meta access token not set")
+    if not re.fullmatch(r"\d{5,25}", str(ad_id)):
+        raise RuntimeError("Bad ad id")
+    if ad_format not in PREVIEW_FORMATS:
+        raise RuntimeError("Unsupported preview format")
+    res = Api(creds["token"]).get(f"{ad_id}/previews", {"ad_format": ad_format})
+    body = ((res.get("data") or [{}])[0]).get("body", "")
+    m = re.search(r'src="([^"]+)"', body)
+    if not m:
+        raise RuntimeError("Meta returned no preview for this ad format")
+    src = m.group(1).replace("&amp;", "&")
+    if not src.startswith("https://"):
+        raise RuntimeError("Unexpected preview address")
+    return src
+
+
 def pull(client):
     creds = _creds()
     account = act_id(client, creds)
     api = Api(creds["token"])
     result_kind = client.get("meta_result", "purchase")
+    DATE_PRESET = client.get("meta_date_preset", "last_30d")  # e.g. last_90d to cover a longer window
     print(f"Meta Ads: pulling {account} ({DATE_PRESET})...")
     info = api.get(account, {"fields": "name,currency,timezone_name,account_status"})
     ads = api.pages(f"{account}/ads", {"fields": AD_FIELDS, "limit": 100,
@@ -237,17 +282,19 @@ def pull(client):
                                                if k in ("spend", "impr", "clicks", "results", "value")}} for d in daily]
     fields = {a["id"]: creative_fields(a.get("creative")) for a in ads}
     vids = video_info(api, [f["videoId"] for f in fields.values()])
+    sharp = creative_thumbs(api, [(a.get("creative") or {}).get("id") for a in ads])
     rows = []
     for a in ads:
         cr, f = a.get("creative") or {}, fields[a["id"]]
         v = vids.get(f["videoId"], {})
+        thumb = v.get("thumb") or cr.get("image_url") or sharp.get(cr.get("id")) or cr.get("thumbnail_url") or ""
         rows.append({
             "id": a["id"], "name": a.get("name", ""), "status": a.get("effective_status") or a.get("status", ""),
             "created": a.get("created_time", ""),
             "campaignId": (a.get("campaign") or {}).get("id", ""), "campaign": (a.get("campaign") or {}).get("name", ""),
             "objective": (a.get("campaign") or {}).get("objective", ""),
             "adsetId": (a.get("adset") or {}).get("id", ""), "adset": (a.get("adset") or {}).get("name", ""),
-            **f, "videoLength": v.get("length", 0), "thumbUrl": v.get("thumb") or cr.get("image_url") or cr.get("thumbnail_url") or "",
+            **f, "videoLength": v.get("length", 0), "thumbUrl": thumb, "creativeId": cr.get("id", ""),
             "permalink": v.get("permalink") or cr.get("instagram_permalink_url") or "",
             "previewLink": a.get("preview_shareable_link", ""),
             "m": by_ad.get(a["id"]) or parse_insights({}, result_kind),
@@ -293,50 +340,52 @@ def load_or_pull(key, client):
 
 
 # --------------------------------------------------------------------- sample
+SAMPLE_NAMES = [  # realistic naming so the grouping rules can be tested; the same ad appears in several ad sets on purpose
+    "Ad0380_Catalog_Brand_Baby_Sept-sales_V1_Carousel", "Ad456_Static_Brand_Baby_I-almost-gave-up_V1_Vertical – Copy",
+    "Ad555_Video_Whitelisted_Baby_@sheyanne_Let-me-show-you-how-my-daughter_V1", "Ad523_Video_Whitelisted_Baby_@heather_aboff_I-was-at-my-breaking-point_V1",
+    "Ad601_Video_Whitelisted_Baby_@carly_ciam_Over-the-past-few-months-my-family_V2", "Ad532_Video_Whitelisted_Baby_@princessdianaventura_I-treated-my-babys-eczema_V1",
+    "Ad560_Static_Brand_LongTerm_Eczema-isnt-forever_V1_Square", "Ad634_Static_Brand_All_Luxe-blogger-advertorial_V1",
+    "Ad701_Static_Brand_Baby_BF_Black-Friday-Bundle_V1", "Ad702_Video_Whitelisted_Baby_@sheyanne_BF_Black-Friday-Deal-Is-Live_V1",
+    "Ad703_Static_Brand_All_BlackFriday_50-off-bundle_V2_Vertical", "Ad704_Catalog_Brand_Baby_BF_Sale_V1_Carousel",
+]
+
+
 def sample(client):
     """Deterministic made-up data so the layout can be tested without credentials. Never mix with real data."""
     import random
     rnd = random.Random(7)
-    hooks = ["I stopped buying 5 different serums.", "Dermatologists won't tell you this about SPF.",
-             "Your skin barrier is crying for help.", "Watch what happens after 14 days.",
-             "New: the gentle cleanser sensitive skin deserves.", "Before you buy another moisturizer, read this."]
-    ads = []
-    for i in range(14):
-        video = i % 3 != 2
-        hook_rate = rnd.uniform(0.12, 0.42) if video else 0
-        impr = rnd.randint(8000, 90000)
-        spend = impr / 1000 * rnd.uniform(9, 22)
-        plays = impr * hook_rate
-        ctr = rnd.uniform(0.006, 0.024)
-        clicks = impr * ctr
-        results = clicks * rnd.uniform(0.01, 0.06)
-        ret = [rnd.uniform(0.45, 0.8), rnd.uniform(0.3, 0.55), rnd.uniform(0.18, 0.4), rnd.uniform(0.08, 0.22), rnd.uniform(0.04, 0.15)]
-        ret.sort(reverse=True)
-        h = hooks[i % len(hooks)]
-        ads.append({
-            "id": f"2385000000{i:04d}", "name": f"SAMPLE {'UGC video' if video else 'Static'} {i + 1}",
-            "status": "ACTIVE" if i % 5 else "PAUSED", "created": "2026-10-01T10:00:00+0000",
-            "campaignId": "c1" if i < 8 else "c2", "campaign": "SAMPLE | Prospecting" if i < 8 else "SAMPLE | Retargeting",
-            "objective": "OUTCOME_SALES", "adsetId": f"as{i % 3}", "adset": f"SAMPLE Ad set {i % 3 + 1}",
-            "body": f"{h}\nSample body copy for layout testing only.", "title": "Shop now", "description": "",
-            "cta": "SHOP_NOW", "url": "https://soteriskin.com", "videoId": f"v{i}" if video else "",
-            "format": "Video" if video else "Image", "cards": 0, "variants": {"bodies": [], "titles": []},
-            "videoLength": rnd.choice([12, 22, 31, 45]) if video else 0, "thumbUrl": "", "permalink": "", "previewLink": "",
-            "m": {"spend": round(spend, 2), "impr": impr, "reach": int(impr * 0.7), "clicks": clicks,
-                  "linkClicks": clicks * 0.8, "results": results, "value": results * rnd.uniform(30, 70),
-                  "plays3s": plays, "p25": plays * ret[0], "p50": plays * ret[1], "p75": plays * ret[2],
-                  "p95": plays * ret[3], "p100": plays * ret[4], "thruplay": plays * ret[1] * 0.9, "s30": plays * ret[3],
-                  "avgWatch": rnd.uniform(3, 14) if video else 0, "addToCart": results * 2.4},
-        })
-    if not video_present(ads):
-        raise RuntimeError("sample generation failed")
+    ads, n = [], 0
+    for i, name in enumerate(SAMPLE_NAMES):
+        video = "_Video_" in name
+        catalog = "_Catalog_" in name
+        bf = "_BF_" in name or "BlackFriday" in name
+        for copy in range(rnd.choice([1, 2, 3])):  # the same ad running in several ad sets / as copies
+            n += 1
+            impr = rnd.randint(8000, 60000)
+            spend = impr / 1000 * rnd.uniform(14, 24)
+            plays = impr * rnd.uniform(0.12, 0.42) if video else 0
+            clicks = impr * rnd.uniform(0.006, 0.024)
+            purchases = clicks * rnd.uniform(0.02, 0.08) * (1.25 if bf else 1)
+            ret = sorted([rnd.uniform(0.45, 0.8), rnd.uniform(0.3, 0.55), rnd.uniform(0.18, 0.4), rnd.uniform(0.08, 0.22), rnd.uniform(0.04, 0.15)], reverse=True)
+            ads.append({
+                "id": f"2385{n:010d}", "name": name + (" – Copy" if copy == 1 and not name.endswith("Copy") else (" – Copy 2" if copy == 2 else "")),
+                "status": "ACTIVE" if n % 5 else "PAUSED", "created": "2026-10-01T10:00:00+0000",
+                "campaignId": "c1", "campaign": "SAMPLE-Sales-Prospecting" if copy != 2 else "SAMPLE-Sales-Retargeting",
+                "objective": "OUTCOME_SALES", "adsetId": f"as{copy}", "adset": f"SAMPLE Ad set {copy + 1}",
+                "body": "{{product.name}}\n\n{{product.description}}" if catalog else "I almost gave up on my baby's eczema.\nThen I found this.",
+                "title": "" if catalog else "Shop now", "description": "", "cta": "SHOP_NOW", "url": "https://soteriskin.com",
+                "videoId": f"v{n}" if video else "", "format": "Video" if video else ("Carousel" if catalog else "Image"), "cards": 0,
+                "variants": {"bodies": [], "titles": []}, "videoLength": rnd.choice([22, 31, 41]) if video else 0,
+                "thumbUrl": "", "creativeId": f"cr{n}", "permalink": "", "previewLink": "",
+                "m": {"spend": round(spend, 2), "impr": impr, "reach": int(impr * 0.7), "clicks": clicks, "linkClicks": clicks * 0.8,
+                      "results": purchases, "purchases": purchases, "value": purchases * rnd.uniform(34, 46),
+                      "engagement": impr * rnd.uniform(0.01, 0.05), "plays3s": plays, "p25": plays * ret[0], "p50": plays * ret[1],
+                      "p75": plays * ret[2], "p95": plays * ret[3], "p100": plays * ret[4], "thruplay": plays * ret[1] * 0.9,
+                      "s30": plays * ret[3], "avgWatch": rnd.uniform(3, 14) if video else 0, "addToCart": purchases * 2.4},
+            })
     daily = [{"date": f"2026-11-{d:02d}", "spend": 300 + rnd.random() * 120, "impr": 30000 + rnd.randint(0, 9000),
               "clicks": 500 + rnd.randint(0, 200), "results": 12 + rnd.randint(0, 9), "value": 600 + rnd.randint(0, 400)}
              for d in range(1, 16)]
     return {"version": CACHE_VERSION, "pulledAt": datetime.now().isoformat(timespec="seconds"), "sample": True,
             "account": {"id": "act_SAMPLE", "name": "SAMPLE ACCOUNT", "currency": "USD", "timezone": "", "resultKind": "purchase"},
             "dateRange": "Last 30D", "ads": ads, "daily": daily}
-
-
-def video_present(ads):
-    return any(a["format"] == "Video" for a in ads)

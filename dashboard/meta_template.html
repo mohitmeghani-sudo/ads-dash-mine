@@ -10,6 +10,7 @@
   --ground:#F2F3F6;--surface:#FFFFFF;--sunk:#E9EBF0;--ink:#161B26;--muted:#5A6273;--faint:#8A91A0;--line:#DCE0E7;
   --accent:#1B5FD1;--accent-soft:#E1EBFB;--on-accent:#FFFFFF;
   --win:#137333;--win-bg:#E3F2E7;--avg:#B45F06;--avg-bg:#FCEFDF;--lose:#C5221F;--lose-bg:#FBE7E6;--early:#5A6273;--early-bg:#ECEEF2;
+  --bf:#7A2E9E;--bf-bg:#F3E6FA;
   --f1:#1B5FD1;--f2:#2E7DE0;--f3:#5C9BEA;--f4:#8DBAF0;--f5:#BBD5F6;
   --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
   --ui:"Figtree","Segoe UI",system-ui,-apple-system,sans-serif;
@@ -20,6 +21,7 @@
   --ground:#0E1117;--surface:#161A22;--sunk:#1D222C;--ink:#E7EAF0;--muted:#A0A8B7;--faint:#6F7788;--line:#29303C;
   --accent:#6AA4FF;--accent-soft:#16294A;--on-accent:#0E1117;
   --win:#6DD58C;--win-bg:#15321F;--avg:#F2B061;--avg-bg:#3A2A14;--lose:#F28B82;--lose-bg:#3C1C1A;--early:#A0A8B7;--early-bg:#232833;
+  --bf:#D9A7F2;--bf-bg:#2E1B3B;
   --f1:#6AA4FF;--f2:#5590EE;--f3:#4379D0;--f4:#3563AB;--f5:#2B4E86;
 }}
 :root[data-theme="dark"]{
@@ -27,6 +29,7 @@
   --ground:#0E1117;--surface:#161A22;--sunk:#1D222C;--ink:#E7EAF0;--muted:#A0A8B7;--faint:#6F7788;--line:#29303C;
   --accent:#6AA4FF;--accent-soft:#16294A;--on-accent:#0E1117;
   --win:#6DD58C;--win-bg:#15321F;--avg:#F2B061;--avg-bg:#3A2A14;--lose:#F28B82;--lose-bg:#3C1C1A;--early:#A0A8B7;--early-bg:#232833;
+  --bf:#D9A7F2;--bf-bg:#2E1B3B;
   --f1:#6AA4FF;--f2:#5590EE;--f3:#4379D0;--f4:#3563AB;--f5:#2B4E86;
 }
 *{box-sizing:border-box}
@@ -34,38 +37,43 @@ html,body{margin:0}
 body{background:var(--ground);color:var(--ink);font:14px/1.45 var(--ui);-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
 h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:-.01em}
-.wrap{max-width:1320px;margin:0 auto;padding:18px 16px 60px}
-header.top{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:flex-end;justify-content:space-between;margin-bottom:14px}
+.wrap{max-width:1400px;margin:0 auto;padding:18px 16px 60px}
+header.top{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:flex-end;justify-content:space-between;margin-bottom:10px}
 h1{font-size:26px;font-weight:700}
 .meta{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:13px;color:var(--muted)}
 .meta b{color:var(--ink)}
 .badge-sample{background:var(--lose-bg);color:var(--lose);font-weight:700;padding:2px 8px;border-radius:6px;font-size:12px}
-.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:6px 0 16px;flex-wrap:wrap}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:6px 0 16px;flex-wrap:wrap}
 .tab{background:none;border:0;padding:10px 14px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
 .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab.bf[aria-selected="true"]{border-bottom-color:var(--bf)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
 .grid{display:grid;gap:14px}
-.kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
 .kpi{padding:12px 14px}
 .kpi .l{font-size:12px;color:var(--muted);font-weight:600}
-.kpi .v{font:700 24px var(--display);margin-top:2px}
+.kpi .v{font:700 22px var(--display);margin-top:2px}
 .kpi .s{font-size:12px;color:var(--faint)}
-.two{grid-template-columns:repeat(auto-fit,minmax(380px,1fr))}
+.two{grid-template-columns:repeat(auto-fit,minmax(360px,1fr))}
 @media(max-width:480px){.two{grid-template-columns:1fr}}
-.sec{margin-top:22px}
+.sec{margin-top:24px}
 .sec>h2{font-size:18px;margin-bottom:4px}
-.sec>p.sub{margin:0 0 10px;color:var(--muted);font-size:13px;max-width:80ch}
+.sec>p.sub{margin:0 0 10px;color:var(--muted);font-size:13px;max-width:90ch}
 .chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap}
 .v-win{background:var(--win-bg);color:var(--win)}.v-lose{background:var(--lose-bg);color:var(--lose)}
 .v-avg{background:var(--avg-bg);color:var(--avg)}.v-early{background:var(--early-bg);color:var(--early)}
-.fmt{background:var(--sunk);color:var(--muted);font-weight:600}
+.v-bf{background:var(--bf-bg);color:var(--bf)}
+.tag{display:inline-block;background:var(--sunk);color:var(--muted);font-size:11px;font-weight:600;padding:1px 7px;border-radius:5px;margin-right:4px}
 table{border-collapse:collapse;width:100%;font-size:13px}
-th,td{text-align:right;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th,td{text-align:right;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:middle}
 th:first-child,td:first-child{text-align:left}
-th{font-size:12px;color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--surface);cursor:pointer;user-select:none}
-th.sorted::after{content:" ▾";color:var(--accent)}
-.tscroll{overflow:auto;max-height:560px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
-td.name{white-space:normal;min-width:220px;max-width:340px}
+th{font-size:12px;color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--surface);cursor:pointer;user-select:none;z-index:2}
+th.sorted{color:var(--ink)}th.sorted::after{content:" ▾";color:var(--accent)}th.asc::after{content:" ▴"}
+th.nosort{cursor:default}
+.tscroll{overflow:auto;max-height:640px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+tr[data-open]{cursor:pointer}tr[data-open]:hover td{background:var(--accent-soft)}
+td.lead{white-space:normal;min-width:260px;max-width:380px;text-align:left}
+td.cb,th.cb{width:34px;padding-right:0;text-align:center}
 .thumb{width:44px;height:44px;border-radius:8px;object-fit:cover;background:var(--sunk);flex:none}
 .thumb.ph{display:grid;place-items:center;color:var(--faint);font-size:11px}
 .row{display:flex;gap:10px;align-items:center}
@@ -75,58 +83,52 @@ td.name{white-space:normal;min-width:220px;max-width:340px}
 .cell-bar i{position:absolute;left:0;top:0;bottom:0;background:var(--accent-soft);z-index:0;border-radius:0 4px 4px 0}
 .cell-bar span{position:relative;z-index:1}
 .funnel{display:grid;gap:5px}
-.frow{display:grid;grid-template-columns:88px 1fr 76px;gap:8px;align-items:center;font-size:12px}
+.frow{display:grid;grid-template-columns:88px 1fr 92px;gap:8px;align-items:center;font-size:12px}
 .frow .bar{height:14px;background:var(--sunk);border-radius:4px;overflow:hidden}
 .frow .bar i{display:block;height:100%;border-radius:4px}
 .frow b{text-align:right;font-family:var(--mono);font-weight:500}
 .ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0 12px}
-select,input[type=search]{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+select,input[type=search],input[type=text]{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .seg button{background:var(--surface);border:0;padding:6px 12px;cursor:pointer;font-weight:600;color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
-.cards{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
-.cc{padding:0;overflow:hidden;cursor:pointer;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;display:flex;flex-direction:column}
-.cc:hover{border-color:var(--accent)}
-.cc .im{aspect-ratio:1/1;background:var(--sunk);position:relative;display:grid;place-items:center;color:var(--faint)}
-.cc .im img{width:100%;height:100%;object-fit:cover;display:block}
-.cc .im .chip{position:absolute;left:8px;top:8px}
-.cc .im .play{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.6);color:#fff;border-radius:99px;padding:1px 8px;font-size:11px}
-.cc .bd{padding:10px 12px;display:grid;gap:6px}
-.cc .t{font-weight:600;font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;font-size:11px;color:var(--muted)}
-.mini b{display:block;color:var(--ink);font-size:13px}
-.split{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:16px;align-items:start}
-@media(max-width:900px){.split{grid-template-columns:1fr}}
-.list{display:grid;gap:6px;max-height:78vh;overflow:auto;padding-right:2px}
-.li{display:flex;gap:10px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;text-align:left;width:100%}
-.li[aria-current="true"]{border-color:var(--accent);background:var(--accent-soft)}
-.li .tx{min-width:0;flex:1}
-.li .tx b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.mergebar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--accent-soft);border:1px solid var(--accent);border-radius:10px;padding:8px 12px;margin:0 0 10px}
+.btn{background:var(--accent);color:var(--on-accent);border:0;border-radius:8px;padding:7px 14px;font-weight:700;cursor:pointer}
+.btn.alt{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.5}
 .fb{max-width:480px;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;color:var(--ink)}
 .fb .h{display:flex;gap:10px;align-items:center;padding:10px 12px}
 .fb .av{width:38px;height:38px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-weight:700}
 .fb .pt{padding:0 12px 10px;white-space:pre-wrap;overflow-wrap:anywhere}
-.fb .md{background:var(--sunk);aspect-ratio:1/1;display:grid;place-items:center;color:var(--faint);position:relative}
-.fb .md img{width:100%;height:100%;object-fit:cover;display:block}
+.fb .md{background:var(--sunk);aspect-ratio:1/1;display:grid;place-items:center;color:var(--faint);position:relative;text-align:center;padding:12px}
+.fb .md img{width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0}
 .fb .ct{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--sunk)}
 .fb .ct .u{font-size:11px;color:var(--muted);text-transform:uppercase}
 .fb .ct b{display:block;font-size:14px}
-.fb .btn{background:var(--line);color:var(--ink);border-radius:6px;padding:7px 12px;font-weight:700;font-size:13px;white-space:nowrap}
-.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.fb .btn2{background:var(--line);color:var(--ink);border-radius:6px;padding:7px 12px;font-weight:700;font-size:13px;white-space:nowrap}
+.dyn{background:var(--accent-soft);color:var(--accent);border-radius:4px;padding:0 5px;font-size:12px;font-weight:600}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:8px}
 .mgrid div{background:var(--sunk);border-radius:8px;padding:8px 10px}
 .mgrid span{font-size:11px;color:var(--muted);display:block}
 .mgrid b{font:700 16px var(--display)}
 a{color:var(--accent);font-weight:600;text-decoration:none}a:hover{text-decoration:underline}
 .cform{display:grid;gap:8px;margin:8px 0}
 .cform input,.cform textarea{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
-.cbtn{background:var(--accent);color:var(--on-accent);border:0;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer}
-.cbtn:disabled{opacity:.5}
 .clist{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:8px}
 .clist li{background:var(--sunk);border-radius:8px;padding:8px 10px}
 .clist .chead{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted)}
 .clist p{margin:4px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
 .sr{position:absolute;left:-9999px}
 .empty{color:var(--muted);padding:18px;text-align:center}
+.note{background:var(--sunk);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--muted)}
+.li{display:flex;gap:10px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;margin-top:8px}
+.li .tx{min-width:0;flex:1}.li .tx b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.up{color:var(--win);font-weight:700}.down{color:var(--lose);font-weight:700}.flat{color:var(--muted)}
+tr.sub td{background:var(--sunk);padding:6px 10px}
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(640px,100%);background:var(--ground);border-left:1px solid var(--line);box-shadow:-8px 0 30px rgba(0,0,0,.18);overflow:auto;transform:translateX(102%);transition:transform .18s;z-index:50;padding:14px}
+#drawer.open{transform:none}
+#drawer .x{position:sticky;top:0;float:right;z-index:3}
+iframe.live{width:100%;max-width:440px;height:680px;border:1px solid var(--line);border-radius:10px;background:#fff}
 svg text{font:11px var(--ui);fill:var(--muted)}
 </style>
 
@@ -136,11 +138,12 @@ svg text{font:11px var(--ui);fill:var(--muted)}
       <h1><span id="client">__CLIENT__</span> Ad Dashboard</h1>
       <div class="meta" id="meta"></div>
     </div>
-    <button class="seg" id="theme" type="button" style="padding:6px 12px;cursor:pointer;background:var(--surface);color:var(--muted);font-weight:600" aria-label="Switch light or dark theme">Theme</button>
+    <button class="btn alt" id="theme" type="button" aria-label="Switch light or dark theme">Theme</button>
   </header>
   <div class="tabs" role="tablist" id="tabs"></div>
   <main id="main"></main>
 </div>
+<aside id="drawer" aria-label="Details"></aside>
 
 <script>
 const DATA=/*__DATA__*/null;
@@ -148,270 +151,415 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const store={get(k,d){try{const v=localStorage.getItem("meta."+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("meta."+k,JSON.stringify(v))}catch(e){}}};
 const CUR=(DATA.account&&DATA.account.currency)||"USD";
+const CFG=DATA.config||{creators:[],skus:[],overrides:{}};
 const ads=DATA.ads;
-const state={tab:store.get("tab","creative"),sort:store.get("sort","spend"),fmt:"All",camp:"All",status:"Active",q:"",sel:null,view:store.get("view","cards"),hookSort:"spend"};
+const RESKEY=(DATA.account&&DATA.account.resultKind||"purchase")==="purchase"?"purchases":"results";
+const RESLBL=RESKEY==="purchases"?"Purchases":"Results";
+const T=DATA.targets||{};
 
 /* ------------------------------------------------------------------ numbers */
-const money=(v,d)=>{try{return new Intl.NumberFormat("en-US",{style:"currency",currency:CUR,maximumFractionDigits:d==null?(Math.abs(v)>=100?0:2):d}).format(v)}catch(e){return (v||0).toFixed(2)}};
-const num=v=>Math.round(v||0).toLocaleString("en-US");
+const money=v=>{if(v==null||!isFinite(v))return"–";try{return new Intl.NumberFormat("en-US",{style:"currency",currency:CUR,maximumFractionDigits:Math.abs(v)>=100?0:2}).format(v)}catch(e){return (+v).toFixed(2)}};
+const num=v=>v==null?"–":Math.round(v).toLocaleString("en-US");
 const pct=(v,d=1)=>v==null||!isFinite(v)?"–":(v*100).toFixed(d)+"%";
+const x2=v=>v==null||!isFinite(v)?"–":v.toFixed(2);
 const div=(a,b)=>b>0?a/b:null;
-const dash=v=>v==null?"–":v;
-const FIELDS=["spend","impr","reach","clicks","linkClicks","results","value","plays3s","p25","p50","p75","p95","p100","thruplay","s30","addToCart"];
+const FIELDS=["spend","impr","reach","clicks","linkClicks","results","purchases","value","engagement","plays3s","p25","p50","p75","p95","p100","thruplay","s30","addToCart"];
 function agg(list){
   const t={};FIELDS.forEach(f=>t[f]=0);let w=0,aw=0;
-  list.forEach(a=>{FIELDS.forEach(f=>t[f]+=a.m[f]||0);if(a.m.plays3s){aw+=a.m.avgWatch*a.m.plays3s;w+=a.m.plays3s}});
+  list.forEach(a=>{FIELDS.forEach(f=>t[f]+=(a.m[f]||0));if(a.m.plays3s){aw+=(a.m.avgWatch||0)*a.m.plays3s;w+=a.m.plays3s}});
   t.avgWatch=w?aw/w:0;return t;
 }
 function rates(m){
-  return {ctr:div(m.linkClicks||m.clicks,m.impr),cpc:div(m.spend,m.linkClicks||m.clicks),cpm:m.impr?m.spend/m.impr*1000:null,
-    cpa:div(m.spend,m.results),roas:div(m.value,m.spend),hook:div(m.plays3s,m.impr),
-    hold:div(m.thruplay,m.plays3s),r25:div(m.p25,m.plays3s),r50:div(m.p50,m.plays3s),r75:div(m.p75,m.plays3s),r95:div(m.p95,m.plays3s),r100:div(m.p100,m.plays3s)};
+  const clicks=m.linkClicks||m.clicks,res=m[RESKEY];
+  return {ctr:div(clicks,m.impr),cpc:div(m.spend,clicks),cpm:m.impr?m.spend/m.impr*1000:null,eng:div(m.engagement,m.impr),
+    cpa:div(m.spend,res),roas:div(m.value,m.spend),aov:div(m.value,m.purchases),cvr:div(res,clicks),
+    hook:div(m.plays3s,m.impr),hold:div(m.thruplay,m.plays3s),r25:div(m.p25,m.plays3s),r50:div(m.p50,m.plays3s),r75:div(m.p75,m.plays3s),r95:div(m.p95,m.plays3s),r100:div(m.p100,m.plays3s)};
 }
-const ALL=agg(ads),BASE=rates(ALL);
-const VIDEO_ADS=ads.filter(a=>a.format==="Video");
-const VBASE=rates(agg(VIDEO_ADS));
-const hasResults=ALL.results>0,hasValue=ALL.value>0;
-const T=DATA.targets||{};
-const MIN_SPEND=Math.max(10,ALL.spend*0.015),MIN_IMPR=1000;
 
-/* Verdict: is this creative (or group of creatives) pulling its weight against the account's own average, or a target set in clients.json. */
+/* ------------------------------------------------------------------ reading ad names
+   Names look like  Ad456_Static_Brand_Baby_I-almost-gave-up_V1_Vertical – Copy
+   Ad number = the creative. Copies, versions, placements and ad sets of the same Ad number are one creative.
+   Format / Brand-or-Creator / SKU / creator handle / hook are read from the name's words. clients.json can override. */
+const norm=s=>String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+const FMT_WORDS={video:"Video",reel:"Video",reels:"Video",static:"Static",image:"Static",gif:"Static",catalog:"Catalog",carousel:"Carousel"};
+const SRC_BRAND=/^(brand|branded|founder)$/i,SRC_CR=/^(whitelist|whitelisted|wl|partnership|influencer|creator|ugc)$/i;
+const PLACE=/^(vertical|square|horizontal|story|stories|feed|9x16|1x1|4x5|16x9|916|11|45)$/i;
+const SKU_LABEL={baby:"Baby",all:"All",longterm:"Long-Term",reliefkit:"Relief Kit",activeflare:"Active Flare"};
+const SKUS=(()=>{const m={...SKU_LABEL};(CFG.skus||[]).forEach(s=>{const n=norm(s);if(n&&!m[n])m[n]=String(s).replace(/([a-z])([A-Z])/g,"$1 $2")});return m})();
+const CREATORS=(CFG.creators||[]).map(c=>{const [h,al]=String(c).split("=");const handle="@"+h.replace(/^@/,"").toLowerCase();
+  const keys=new Set([norm(handle)]);const pre=norm(handle.replace(/^@/,"").split(/[_.]/)[0]);if(pre.length>=5)keys.add(pre);
+  (al||"").split(",").forEach(a=>{const n=norm(a);if(n.length>=4)keys.add(n)});return{handle,keys:[...keys]}});
+const stripCopy=s=>{let p,n=String(s||"").trim();do{p=n;n=n.replace(/\s*(?:[–—-]\s*)?copy(?:\s*\d+)?\s*$/i,"").replace(/\s*\(\d+\)\s*$/,"").trim()}while(n!==p);return n};
+const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
+function isBF(raw){return /black[\s_-]*friday/i.test(raw)||/(^|[^a-z])bf(?![a-z])/i.test(raw)}
+function placeholderless(t){return String(t||"").replace(/\{\{[^}]*\}\}/g,"").trim()}
+function parseAd(a){
+  const raw=a.name||"",base=stripCopy(raw);
+  const num=(base.match(/(?:^|[^a-z])ad[\s_-]*0*(\d+)/i)||[])[1]||"";
+  const normAll=norm(base),fmts=new Set(),used=new Set();let src="",sku="",creator="",ver="",work=base;
+  /* handles contain "_" / "." which are also the name separators: cut a known handle out of the name before splitting into words */
+  CREATORS.forEach(c=>{if(creator)return;
+    const re=new RegExp("@?"+c.handle.slice(1).replace(/[.*+?^${}()|[\]\\]/g,"\\$&").replace(/_/g,"[_ .-]?")+"(?![a-z0-9])","i");
+    if(re.test(work)){creator=c.handle;work=work.replace(re," ")}});
+  const tokens=work.split(/[_\s]+/).filter(Boolean);
+  CREATORS.forEach(c=>{if(!creator&&c.keys.some(k=>normAll.includes(k)))creator=c.handle});
+  tokens.forEach((t,i)=>{
+    const n=norm(t);
+    if(/^ad\d+$/i.test(t)||(i===0&&/^ad$/i.test(t))){used.add(i);return}
+    if(FMT_WORDS[n]){fmts.add(FMT_WORDS[n]);used.add(i);return}
+    if(SRC_BRAND.test(t)){src="Brand";used.add(i);return}
+    if(SRC_CR.test(t)){if(src!=="Brand")src="Creator";used.add(i);return}
+    if(SKUS[n]){if(!sku)sku=SKUS[n];used.add(i);return}
+    if(/^v\d+$/i.test(t)){ver=t.toUpperCase();used.add(i);return}
+    if(PLACE.test(t)||/^(bf\d*|blackfriday\d*)$/i.test(t)){used.add(i);return}
+    if(t.startsWith("@")){if(!creator)creator=t.toLowerCase().replace(/[^@a-z0-9._]/g,"");used.add(i);return}
+    if(creator&&CREATORS.some(c=>c.handle===creator&&c.keys.some(k=>n===k||(n.length>=5&&n.includes(k))))){used.add(i);return}
+  });
+  const fmt=fmts.has("Catalog")?"Catalog":fmts.has("Video")?"Video":fmts.has("Carousel")?"Carousel":fmts.has("Static")?"Static":(a.format==="Image"?"Static":a.format);
+  let hook=cap(tokens.filter((t,i)=>!used.has(i)).join(" ").replace(/-/g," ").replace(/\s+/g," ").trim());
+  let hookFrom="name";
+  if(!hook){const line=placeholderless(a.body).split(/\n/)[0].trim()||placeholderless(a.title);hook=line.length>110?line.slice(0,109)+"…":line;hookFrom="copy"}
+  let p={num,fmt,source:src||(creator?"Creator":"Brand"),sku,creator,hook,hookFrom,ver,bf:isBF(raw),
+    key:num?"ad"+num:norm(base)||a.id};
+  const ov=(CFG.overrides||{});const o=ov["Ad"+num]||ov["ad"+num]||ov[raw]||ov[base];
+  if(o){["creator","hook","sku","source","fmt"].forEach(k=>{if(o[k]!=null)p[k]=o[k]});if(o.format)p.fmt=o.format;if(o.bf!=null)p.bf=!!o.bf}
+  p.title=p.hook||(num?"Ad"+num:raw);
+  return p;
+}
+ads.forEach(a=>{a.p=parseAd(a);a.active=a.status==="ACTIVE"});
+
+/* ------------------------------------------------------------------ verdicts */
+const ALL=agg(ads),BASE=rates(ALL);
+const VIDEO_ADS=ads.filter(a=>a.p.fmt==="Video"),VBASE=rates(agg(VIDEO_ADS));
+const hasResults=ALL[RESKEY]>0,hasValue=ALL.value>0;
+const MIN_SPEND=Math.max(10,ALL.spend*0.0075),MIN_IMPR=1000;
 function verdict(m,isVideo){
   const r=rates(m),why=[];
-  if(m.impr<MIN_IMPR||m.spend<MIN_SPEND)return{k:"early",label:"Too early",why:["Not enough spend or impressions yet ("+money(m.spend)+", "+num(m.impr)+" impr.)"]};
-  let score=0;
-  const cpaBase=T.cpa||BASE.cpa,roasBase=T.roas||BASE.roas;
+  if(m.impr<MIN_IMPR||m.spend<MIN_SPEND)return{k:"early",label:"Too early",why:["Not enough spend or impressions yet ("+money(m.spend)+", "+num(m.impr)+" impr.)"],score:0};
+  let score=0;const cpaBase=T.cpa||BASE.cpa,roasBase=T.roas||BASE.roas;
   if(hasResults){
-    if(m.results===0){score=-2;why.push(money(m.spend)+" spent, no results")}
-    else if(T.roas&&r.roas!=null||(hasValue&&!T.cpa&&r.roas!=null)){
-      const q=r.roas/roasBase;score=q>=1.15?1:q<=.85?-1:0;why.push("ROAS "+r.roas.toFixed(2)+" vs "+roasBase.toFixed(2)+(T.roas?" target":" account avg"));
-    }else{
-      const q=r.cpa/cpaBase;score=q<=.85?1:q>=1.2?-1:0;why.push("CPA "+money(r.cpa)+" vs "+money(cpaBase)+(T.cpa?" target":" account avg"));
-    }
-  }else if(BASE.ctr){
-    const q=r.ctr/BASE.ctr;score=q>=1.15?1:q<=.85?-1:0;why.push("CTR "+pct(r.ctr,2)+" vs "+pct(BASE.ctr,2)+" account avg");
-  }
+    if(m[RESKEY]===0){score=-2;why.push(money(m.spend)+" spent, no "+RESLBL.toLowerCase())}
+    else if((T.roas&&r.roas!=null)||(hasValue&&!T.cpa&&r.roas!=null)){const q=r.roas/roasBase;score=q>=1.15?1:q<=.85?-1:0;why.push("ROAS "+x2(r.roas)+" vs "+x2(roasBase)+(T.roas?" target":" account avg"))}
+    else{const q=r.cpa/cpaBase;score=q<=.85?1:q>=1.2?-1:0;why.push("CPA "+money(r.cpa)+" vs "+money(cpaBase)+(T.cpa?" target":" account avg"))}
+  }else if(BASE.ctr){const q=r.ctr/BASE.ctr;score=q>=1.15?1:q<=.85?-1:0;why.push("CTR "+pct(r.ctr,2)+" vs "+pct(BASE.ctr,2)+" account avg")}
   if(isVideo&&r.hook!=null&&VBASE.hook){
-    const t=T.hookRate||VBASE.hook,q=r.hook/t;
-    why.push("Hook rate "+pct(r.hook)+" vs "+pct(t)+(T.hookRate?" target":" video avg"));
-    if(score===0)score=q>=1.2?0.5:q<=.75?-0.5:0;
+    const t=T.hookRate||VBASE.hook,q=r.hook/t;why.push("Hook rate "+pct(r.hook)+" vs "+pct(t)+(T.hookRate?" target":" video avg"));
+    if(score===0)score=q>=1.2?.5:q<=.75?-.5:0;
     if(r.hold!=null&&VBASE.hold&&r.hold<VBASE.hold*.7)why.push("Viewers drop off early (ThruPlay "+pct(r.hold)+" of 3s plays)");
   }
-  const k=score>=1?"win":score<=-1?"lose":score>0?"win":score<0?"lose":"avg";
+  const k=score>0?"win":score<0?"lose":"avg";
   return{k,label:{win:"Working",lose:"Not working",avg:"Average",early:"Too early"}[k],why,score};
 }
-ads.forEach(a=>{a.r=rates(a.m);a.v=verdict(a.m,a.format==="Video")});
 const chip=v=>`<span class="chip v-${v.k}" title="${esc(v.why.join(" · "))}">${v.label}</span>`;
 
-/* ------------------------------------------------------------------ header */
-function renderHeader(){
-  const acc=DATA.account||{};
-  $("#meta").innerHTML=[DATA.sample?'<span class="badge-sample">SAMPLE DATA, not real results</span>':"",
-    `<span>Account <b>${esc(acc.name||acc.id||"")}</b></span>`,`<span>Range <b>${esc(DATA.dateRange)}</b></span>`,
-    `<span>${ads.length} ads, ${VIDEO_ADS.length} video</span>`,`<span>Pulled ${esc(DATA.pulledAt.replace("T"," ").slice(0,16))}</span>`].filter(Boolean).join("");
-  const tabs=[["creative","Creative insights"],["ads","Ad previews"],["campaigns","Campaigns"]];
-  $("#tabs").innerHTML=tabs.map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${state.tab===k}">${l}</button>`).join("");
+/* ------------------------------------------------------------------ groups: creatives, creators, hooks ... */
+let merges=[],mergeShared=false;
+const state={tab:store.get("tab","creatives"),open:null,openCreators:new Set(),fmt:"All",q:"",status:"All",camp:"All",hideTiny:false};
+const selAd=new Set(),selCr=new Set(),sorts={};
+let D={};
+function makeGroup(key,list,name){
+  const rep=list.slice().sort((a,b)=>b.m.spend-a.m.spend)[0],m=agg(list),p=rep.p;
+  const withThumb=list.filter(a=>a.thumb).sort((a,b)=>b.m.spend-a.m.spend)[0];
+  return{key,ads:list,m,r:rates(m),rep,p,name:name||p.title,fmt:p.fmt,bf:list.some(a=>a.p.bf),thumb:withThumb?withThumb.thumb:"",
+    manual:key.startsWith("m:"),adsets:new Set(list.map(a=>a.adsetId||a.adset)).size,active:list.some(a=>a.active),
+    v:verdict(m,p.fmt==="Video"),creator:p.creator||(p.source==="Creator"?"Creator (unnamed)":"Brand / no creator")};
 }
-$("#tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;state.tab=b.dataset.tab;store.set("tab",state.tab);render()});
-$("#theme").addEventListener("click",()=>{const d=document.documentElement,cur=d.dataset.theme||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");d.dataset.theme=cur==="dark"?"light":"dark";store.set("theme",d.dataset.theme)});
-const savedTheme=store.get("theme",null);if(savedTheme)document.documentElement.dataset.theme=savedTheme;
-
-/* ------------------------------------------------------------------ shared pieces */
-function thumbHtml(a,cls="thumb"){return a.thumb?`<img class="${cls}" src="${esc(a.thumb)}" alt="" loading="lazy">`:`<div class="${cls} ph">${a.format==="Video"?"▶":"IMG"}</div>`}
-function hookOf(a){const t=(a.body||"").trim();if(!t)return a.title||"(no text)";const m=t.split(/\n|(?<=[.!?])\s/)[0].replace(/\s+/g," ").trim();return m.length>120?m.slice(0,119)+"…":m}
-function kpi(l,v,s){return `<div class="card kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s||""}</div></div>`}
-function funnel(m,compact){
-  const r=rates(m);if(!m.plays3s)return `<div class="small">No video plays recorded.</div>`;
-  const rows=[["Impressions",1,num(m.impr),"var(--f5)"],["3s plays",m.plays3s/m.impr,pct(r.hook)+" of impr.","var(--f1)"],
-    ["25% watched",r.r25*m.plays3s/m.impr,pct(r.r25)+" of 3s","var(--f2)"],["50% watched",r.r50*m.plays3s/m.impr,pct(r.r50)+" of 3s","var(--f3)"],
-    ["75% watched",r.r75*m.plays3s/m.impr,pct(r.r75)+" of 3s","var(--f4)"],["95% watched",r.r95*m.plays3s/m.impr,pct(r.r95)+" of 3s","var(--f5)"],
-    ["ThruPlay",r.hold*m.plays3s/m.impr,pct(r.hold)+" of 3s","var(--f3)"]];
-  const max=Math.max(...rows.map(x=>x[1]),.0001);
-  return `<div class="funnel">${rows.slice(0,compact?4:7).map(([l,w,t,c])=>`<div class="frow"><span>${l}</span><div class="bar"><i style="width:${Math.max(2,w/max*100)}%;background:${c}"></i></div><b>${t}</b></div>`).join("")}</div>`;
-}
-function barCell(v,max,txt){return `<td class="cell-bar"><i style="width:${max?Math.min(100,(v||0)/max*100):0}%"></i><span>${txt}</span></td>`}
-function sortTable(rows,key,desc=true){return rows.slice().sort((a,b)=>{const x=key(a),y=key(b);return(y==null?-Infinity:y)-(x==null?-Infinity:x)})}
-
-/* ------------------------------------------------------------------ creative insights */
-const SORTS={spend:["Spend",a=>a.m.spend],roas:["ROAS",a=>a.r.roas],cpa:["Lowest CPA",a=>a.r.cpa==null?null:-a.r.cpa],ctr:["CTR",a=>a.r.ctr],hook:["Hook rate (3s)",a=>a.r.hook],hold:["ThruPlay rate",a=>a.r.hold],r50:["50% watched",a=>a.r.r50]};
-function renderCreative(){
-  const A=ALL,B=BASE,V=VBASE;
-  const working=ads.filter(a=>a.v.k==="win").sort((x,y)=>y.m.spend-x.m.spend),losing=ads.filter(a=>a.v.k==="lose").sort((x,y)=>y.m.spend-x.m.spend);
-  const fmts=[...new Set(ads.map(a=>a.format))].map(f=>({f,list:ads.filter(a=>a.format===f)})).map(g=>({...g,m:agg(g.list)})).sort((a,b)=>b.m.spend-a.m.spend);
-  const hooks=new Map();ads.forEach(a=>{const h=hookOf(a);if(!hooks.has(h))hooks.set(h,[]);hooks.get(h).push(a)});
-  const hookRows=[...hooks].map(([h,list])=>{const m=agg(list);return{h,list,m,r:rates(m),v:verdict(m,list.every(a=>a.format==="Video")),video:list.some(a=>a.format==="Video")}});
-  const hs={spend:x=>x.m.spend,hook:x=>x.video?x.r.hook:null,ctr:x=>x.r.ctr,cpa:x=>x.r.cpa==null?null:-x.r.cpa,roas:x=>x.r.roas};
-  const hr=sortTable(hookRows,hs[state.hookSort]||hs.spend).slice(0,25);
-  const vids=sortTable(VIDEO_ADS.filter(a=>a.m.plays3s>0),(SORTS[state.sort]||SORTS.spend)[1]);
-  const maxHook=Math.max(...vids.map(a=>a.r.hook||0),.01);
-  const main=$("#main");
-  main.innerHTML=`
-  <div class="grid kpis">
-    ${kpi("Spend",money(A.spend),num(A.impr)+" impressions")}
-    ${kpi(hasValue?"ROAS":"CPA",hasValue?(B.roas==null?"–":B.roas.toFixed(2)):dash(B.cpa==null?null:money(B.cpa)),hasResults?num(A.results)+" results"+(hasValue?" · CPA "+(B.cpa==null?"–":money(B.cpa)):""):"no results tracked")}
-    ${kpi("CTR (link)",pct(B.ctr,2),"CPC "+(B.cpc==null?"–":money(B.cpc)))}
-    ${kpi("Hook rate",pct(V.hook),"3-second plays ÷ impressions (video)")}
-    ${kpi("ThruPlay rate",pct(V.hold),"ThruPlays ÷ 3-second plays")}
-    ${kpi("Avg watch time",agg(VIDEO_ADS).avgWatch?agg(VIDEO_ADS).avgWatch.toFixed(1)+"s":"–","weighted by 3s plays")}
-  </div>
-
-  <section class="sec"><h2>What's working and what's not</h2>
-    <p class="sub">Each creative is judged on its own results against the account average${T.cpa||T.roas||T.hookRate?" (or the targets set for this client)":""}: ${hasResults?(hasValue?"ROAS":"CPA"):"CTR"} first, then hook rate for video. Creatives without enough spend are marked "Too early" instead of being judged.</p>
-    <div class="grid two">
-      <div class="card"><h3 style="color:var(--win)">Working <span class="small">(${working.length})</span></h3>${creativeList(working.slice(0,6))}</div>
-      <div class="card"><h3 style="color:var(--lose)">Not working <span class="small">(${losing.length})</span></h3>${creativeList(losing.slice(0,6))}</div>
-    </div>
-  </section>
-
-  <section class="sec"><h2>Video retention: who watched how much</h2>
-    <p class="sub">Hook rate is the share of impressions that played at least 3 seconds. The percentages after it are the share of those 3-second plays that kept watching to 25 / 50 / 75 / 95 % of the video. A strong hook with a steep drop-off means the opening works but the body doesn't.</p>
-    <div class="ctrl"><label class="small" for="sortSel">Sort by</label>
-      <select id="sortSel">${Object.entries(SORTS).map(([k,[l]])=>`<option value="${k}" ${state.sort===k?"selected":""}>${l}</option>`).join("")}</select></div>
-    ${vids.length?`<div class="tscroll"><table><thead><tr><th>Video ad</th><th>Verdict</th><th>Length</th><th>Spend</th><th>Hook rate</th><th>25%</th><th>50%</th><th>75%</th><th>95%</th><th>ThruPlay</th><th>Avg watch</th><th>CTR</th><th>${hasValue?"ROAS":"CPA"}</th></tr></thead><tbody>
-      ${vids.map(a=>`<tr data-open="${esc(a.id)}" style="cursor:pointer"><td class="name"><div class="row">${thumbHtml(a)}<div><b>${esc(a.name)}</b><div class="small">${esc(hookOf(a))}</div></div></div></td><td>${chip(a.v)}</td><td>${a.videoLength?a.videoLength+"s":"–"}</td><td>${money(a.m.spend)}</td>${barCell(a.r.hook,maxHook,pct(a.r.hook))}<td>${pct(a.r.r25,0)}</td><td>${pct(a.r.r50,0)}</td><td>${pct(a.r.r75,0)}</td><td>${pct(a.r.r95,0)}</td><td>${pct(a.r.hold,0)}</td><td>${a.m.avgWatch?a.m.avgWatch.toFixed(1)+"s":"–"}</td><td>${pct(a.r.ctr,2)}</td><td>${hasValue?(a.r.roas==null?"–":a.r.roas.toFixed(2)):(a.r.cpa==null?"–":money(a.r.cpa))}</td></tr>`).join("")}
-      <tr style="font-weight:700"><td>All video (weighted)</td><td></td><td></td><td>${money(agg(VIDEO_ADS).spend)}</td><td>${pct(V.hook)}</td><td>${pct(V.r25,0)}</td><td>${pct(V.r50,0)}</td><td>${pct(V.r75,0)}</td><td>${pct(V.r95,0)}</td><td>${pct(V.hold,0)}</td><td></td><td>${pct(V.ctr,2)}</td><td>${hasValue?(V.roas==null?"–":V.roas.toFixed(2)):(V.cpa==null?"–":money(V.cpa))}</td></tr>
-      </tbody></table></div>`:`<div class="card empty">No video ads with plays in this range.</div>`}
-  </section>
-
-  <section class="sec"><h2>Hooks: the opening line of each ad</h2>
-    <p class="sub">Ads are grouped by the first sentence of their primary text (or the headline when there is no text), so the same hook used across several creatives adds up. Hook rate only counts video.</p>
-    <div class="ctrl"><label class="small" for="hookSel">Sort by</label>
-      <select id="hookSel">${[["spend","Spend"],["hook","Hook rate"],["ctr","CTR"],["cpa","Lowest CPA"],["roas","ROAS"]].map(([k,l])=>`<option value="${k}" ${state.hookSort===k?"selected":""}>${l}</option>`).join("")}</select></div>
-    <div class="tscroll"><table><thead><tr><th>Hook</th><th>Verdict</th><th>Ads</th><th>Spend</th><th>Hook rate</th><th>CTR</th><th>Results</th><th>CPA</th><th>ROAS</th></tr></thead><tbody>
-      ${hr.map(x=>`<tr><td class="name">${esc(x.h)}</td><td>${chip(x.v)}</td><td>${x.list.length}</td><td>${money(x.m.spend)}</td><td>${x.video?pct(x.r.hook):"–"}</td><td>${pct(x.r.ctr,2)}</td><td>${num(x.m.results)}</td><td>${x.r.cpa==null?"–":money(x.r.cpa)}</td><td>${x.r.roas==null?"–":x.r.roas.toFixed(2)}</td></tr>`).join("")}
-    </tbody></table></div>
-  </section>
-
-  <section class="sec"><h2>Format comparison</h2>
-    <div class="tscroll"><table><thead><tr><th>Format</th><th>Ads</th><th>Spend</th><th>Share</th><th>CTR</th><th>CPC</th><th>Results</th><th>CPA</th><th>ROAS</th></tr></thead><tbody>
-      ${fmts.map(g=>{const r=rates(g.m);return `<tr><td>${esc(g.f)}</td><td>${g.list.length}</td><td>${money(g.m.spend)}</td><td>${pct(div(g.m.spend,A.spend),0)}</td><td>${pct(r.ctr,2)}</td><td>${r.cpc==null?"–":money(r.cpc)}</td><td>${num(g.m.results)}</td><td>${r.cpa==null?"–":money(r.cpa)}</td><td>${r.roas==null?"–":r.roas.toFixed(2)}</td></tr>`}).join("")}
-    </tbody></table></div>
-  </section>
-
-  <section class="sec"><h2>All creatives</h2>
-    <div class="ctrl"><div class="seg" id="vseg">${[["All",null],["Working","win"],["Not working","lose"],["Average","avg"],["Too early","early"]].map(([l,k])=>`<button type="button" data-vf="${k||""}" aria-pressed="${(state.vf||"")===(k||"")}">${l}</button>`).join("")}</div></div>
-    <div class="grid cards">${sortTable(ads.filter(a=>!state.vf||a.v.k===state.vf),a=>a.m.spend).map(card).join("")||'<div class="empty">Nothing here.</div>'}</div>
-  </section>`;
-  const ss=$("#sortSel");ss.onchange=()=>{state.sort=ss.value;store.set("sort",state.sort);renderCreative()};
-  const hs2=$("#hookSel");hs2.onchange=()=>{state.hookSort=hs2.value;renderCreative()};
-  $("#vseg").onclick=e=>{const b=e.target.closest("[data-vf]");if(!b)return;state.vf=b.dataset.vf;renderCreative()};
-}
-function creativeList(list){
-  if(!list.length)return `<div class="small" style="padding:10px 0">None yet.</div>`;
-  return list.map(a=>`<div class="li" style="margin-top:8px" data-open="${esc(a.id)}"><div>${thumbHtml(a)}</div><div class="tx"><b>${esc(a.name)}</b><span class="small">${esc(a.v.why[0]||"")}</span><div class="small">${money(a.m.spend)} spent · ${a.format}${a.r.hook!=null&&a.format==="Video"?" · hook "+pct(a.r.hook,0):""}</div></div>${chip(a.v)}</div>`).join("");
-}
-function card(a){
-  const r=a.r;
-  return `<button class="cc" data-open="${esc(a.id)}" type="button"><div class="im">${a.thumb?`<img src="${esc(a.thumb)}" alt="" loading="lazy">`:`<span>${a.format==="Video"?"▶ no thumbnail":"no image"}</span>`}<span class="chip v-${a.v.k}">${a.v.label}</span>${a.format==="Video"&&a.videoLength?`<span class="play">▶ ${a.videoLength}s</span>`:""}</div>
-    <div class="bd"><div class="t">${esc(hookOf(a))}</div>
-    <div class="mini"><span><b>${money(a.m.spend)}</b>spend</span><span><b>${hasValue?(r.roas==null?"–":r.roas.toFixed(2)):(r.cpa==null?"–":money(r.cpa))}</b>${hasValue?"ROAS":"CPA"}</span><span><b>${a.format==="Video"?pct(r.hook,0):pct(r.ctr,1)}</b>${a.format==="Video"?"hook":"CTR"}</span></div></div></button>`;
+function groupBy(list,keyFn,mk){const mp=new Map();list.forEach(x=>{const k=keyFn(x);if(!mp.has(k))mp.set(k,[]);mp.get(k).push(x)});return[...mp].map(([k,l])=>mk(k,l))}
+function rebuild(){
+  const owner=new Map();merges.forEach(g=>g.ads.forEach(id=>owner.set(id,g)));
+  const cr=groupBy(ads,a=>owner.has(a.id)?"m:"+owner.get(a.id).id:a.p.key,(k,l)=>makeGroup(k,l,k.startsWith("m:")?(merges.find(g=>"m:"+g.id===k)||{}).name:""));
+  const byKey={};cr.forEach(g=>byKey[g.key]=g);
+  const sub=(arr,keyFn,fmtFn)=>groupBy(arr,keyFn,(k,l)=>{const ads2=l.flatMap(g=>g.ads),m=agg(ads2);
+    return{key:k,list:l,ads:ads2,m,r:rates(m),v:verdict(m,l.every(g=>g.fmt==="Video")),video:l.some(g=>g.fmt==="Video")}});
+  D={creatives:cr,byKey,
+    creators:sub(cr,g=>g.creator),
+    hooks:sub(cr,g=>norm(g.p.hook).slice(0,60)||"nohook"),
+    skus:sub(cr,g=>g.p.sku||"No SKU tag"),fmts:sub(cr,g=>g.fmt||"Other"),
+    sources:sub(cr,g=>g.p.source),adById:Object.fromEntries(ads.map(a=>[a.id,a]))};
+  D.hooks.forEach(h=>h.label=h.list.slice().sort((a,b)=>b.m.spend-a.m.spend)[0].p.hook||"(no hook text)");
 }
 
-/* ------------------------------------------------------------------ ads (previews) */
-function filtered(){
-  const q=state.q.toLowerCase();
-  return ads.filter(a=>(state.camp==="All"||a.campaign===state.camp)&&(state.fmt==="All"||a.format===state.fmt)
-    &&(state.status==="All"||(state.status==="Active"?a.status==="ACTIVE":a.status!=="ACTIVE"))
-    &&(!q||(a.name+" "+a.body+" "+a.title+" "+a.campaign+" "+a.adset).toLowerCase().includes(q)));
+/* ------------------------------------------------------------------ table component */
+const COLS={
+  spend:{l:"Spend",v:g=>g.m.spend,f:money},
+  clicks:{l:"Clicks",v:g=>g.m.linkClicks||g.m.clicks,f:num,tip:"Link clicks"},
+  ctr:{l:"CTR",v:g=>g.r.ctr,f:v=>pct(v,2),tip:"Link clicks ÷ impressions"},
+  eng:{l:"Eng. rate",v:g=>g.r.eng,f:v=>pct(v,2),tip:"Post engagements (reactions, comments, shares, saves, clicks) ÷ impressions"},
+  purch:{l:RESLBL,v:g=>g.m[RESKEY],f:num},
+  cpa:{l:"CPA",v:g=>g.r.cpa,f:money,low:true},
+  roas:{l:"ROAS",v:g=>g.r.roas,f:x2},
+  rev:{l:"Revenue",v:g=>g.m.value,f:money},
+  aov:{l:"AOV",v:g=>g.r.aov,f:money},
+  cvr:{l:"CVR",v:g=>g.r.cvr,f:v=>pct(v,1),tip:RESLBL+" ÷ link clicks"},
+  cpc:{l:"CPC",v:g=>g.r.cpc,f:money,low:true},
+  cpm:{l:"CPM",v:g=>g.r.cpm,f:money,low:true},
+  impr:{l:"Impr.",v:g=>g.m.impr,f:num},
+  hook:{l:"Hook rate",v:g=>g.m.plays3s?g.r.hook:null,f:v=>pct(v,1),tip:"3-second plays ÷ impressions (video)"},
+};
+const MAIN_COLS=["spend","clicks","ctr","eng","purch","cpa","roas","rev","aov","cvr","cpc","cpm","hook"];
+const sortVal=(row,k,leadFn)=>k==="lead"?leadFn(row):k==="verdict"?(row.v?row.v.score:0):(COLS[k]?COLS[k].v(row):0);
+function table(id,rows,o){
+  const st=sorts[id]||(sorts[id]={k:o.sort||"spend",asc:false}),cols=o.cols||MAIN_COLS;
+  const sorted=rows.slice().sort((a,b)=>{
+    if(st.k==="lead"){const r=String(o.leadSort?o.leadSort(a):"").localeCompare(String(o.leadSort?o.leadSort(b):""));return st.asc?r:-r}
+    const x=sortVal(a,st.k),y=sortVal(b,st.k);if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return-1;return st.asc?x-y:y-x});
+  const th=(k,l,tip)=>`<th data-sort="${id}|${k}" class="${st.k===k?"sorted"+(st.asc?" asc":""):""}" title="${esc(tip||"")}">${l}</th>`;
+  const head=`<tr>${o.select?`<th class="cb nosort"></th>`:""}${th("lead",o.leadLabel||"Name")}${o.verdict===false?"":th("verdict","Verdict")}${(o.extra||[]).map(e=>th(e.k,e.l,e.tip)).join("")}${cols.map(k=>th(k,COLS[k].l,COLS[k].tip)).join("")}</tr>`;
+  const maxHook=Math.max(...sorted.map(r=>COLS.hook.v(r)||0),.01);
+  const body=sorted.map(r=>{
+    const sel=o.select?`<td class="cb"><input type="checkbox" data-sel="${o.select}|${esc(r.key||r.id)}" ${(o.select==="ad"?selAd:selCr).has(r.key||r.id)?"checked":""} aria-label="Select"></td>`:"";
+    return `<tr ${o.open?`data-open="${o.open}|${esc(r.key||r.id)}"`:""} ${o.rowAttr?o.rowAttr(r):""}>${sel}<td class="lead">${o.lead(r)}</td>${o.verdict===false?"":`<td>${r.v?chip(r.v):""}</td>`}${(o.extra||[]).map(e=>`<td>${e.h(r)}</td>`).join("")}${cols.map(k=>{const v=COLS[k].v(r);return k==="hook"?`<td class="cell-bar"><i style="width:${v?Math.min(100,v/maxHook*100):0}%"></i><span>${COLS[k].f(v)}</span></td>`:`<td>${COLS[k].f(v)}</td>`}).join("")}</tr>${o.after?o.after(r)||"":""}`}).join("");
+  return `<div class="tscroll"><table><thead>${head}</thead><tbody>${body||`<tr><td colspan="30" class="empty">Nothing here.</td></tr>`}</tbody></table></div>`;
 }
+function thumbHtml(g,cls="thumb"){return g.thumb?`<img class="${cls}" src="${esc(g.thumb)}" alt="" loading="lazy">`:`<div class="${cls} ph">${g.fmt==="Video"?"▶":g.fmt==="Catalog"?"▦":"IMG"}</div>`}
+const tags=p=>[p.fmt,p.sku,p.creator||p.source,p.ver].filter(Boolean).map(t=>`<span class="tag">${esc(t)}</span>`).join("");
+const leadCreative=g=>`<div class="row">${thumbHtml(g)}<div style="min-width:0"><b>${esc(g.name)}</b>${g.bf?' <span class="chip v-bf">Black Friday</span>':""}${g.manual?' <span class="tag">merged</span>':""}<div class="small">${g.p.num?"Ad"+esc(g.p.num)+" · ":""}${g.ads.length} ad${g.ads.length>1?"s":""} · ${g.adsets} ad set${g.adsets>1?"s":""}</div><div>${tags(g.p)}</div></div></div>`;
+const leadAd=a=>`<div class="row">${thumbHtml(a)}<div style="min-width:0"><b>${esc(a.name)}</b>${a.p.bf?' <span class="chip v-bf">BF</span>':""}<div class="small">${esc(a.campaign)} › ${esc(a.adset)} · ${a.active?"active":esc((a.status||"").toLowerCase().replace(/_/g," "))}</div><div>${tags(a.p)}</div></div></div>`;
+function mergeBar(kind){
+  const set=kind==="ad"?selAd:selCr;if(set.size<2&&!set.size)return"";
+  if(set.size<2)return`<div class="mergebar"><span>${set.size} selected. Tick at least 2 to merge their insights.</span><button class="btn alt" data-clear="${kind}">Clear</button></div>`;
+  const first=kind==="ad"?D.adById[[...set][0]].p.title:D.byKey[[...set][0]].name;
+  return`<div class="mergebar"><b>${set.size} selected</b><input type="text" id="mergeName" value="${esc(first)}" size="34" aria-label="Name for the merged creative"><button class="btn" data-merge="${kind}">Merge insights</button><button class="btn alt" data-clear="${kind}">Clear</button><span class="small">${mergeShared?"Saved for everyone using this dashboard.":"Saved in this browser only (no shared storage on the server)."}</span></div>`;
+}
+function filters(){
+  const camps=[...new Set(ads.map(a=>a.campaign))].sort(),fm=["All",...new Set(ads.map(a=>a.p.fmt))];
+  return`<div class="ctrl"><input type="search" id="q" placeholder="Search name, hook, creator, campaign" value="${esc(state.q)}" style="min-width:230px">
+    <div class="seg">${fm.map(f=>`<button type="button" data-fmt="${esc(f)}" aria-pressed="${state.fmt===f}">${esc(f)}</button>`).join("")}</div>
+    <select id="fs">${["All","Active","Not active"].map(c=>`<option ${state.status===c?"selected":""}>${c}</option>`).join("")}</select>
+    <select id="fc"><option value="All">All campaigns</option>${camps.map(c=>`<option ${state.camp===c?"selected":""}>${esc(c)}</option>`).join("")}</select>
+    <label class="small"><input type="checkbox" id="tiny" ${state.hideTiny?"checked":""}> hide tiny spend</label></div>`;
+}
+const okAd=a=>(state.fmt==="All"||a.p.fmt===state.fmt)&&(state.camp==="All"||a.campaign===state.camp)&&(state.status==="All"||(state.status==="Active"?a.active:!a.active))
+  &&(!state.hideTiny||a.m.spend>=MIN_SPEND)&&(!state.q||(a.name+" "+a.p.hook+" "+a.p.creator+" "+a.campaign+" "+a.adset+" "+a.p.sku).toLowerCase().includes(state.q.toLowerCase()));
+const okGroup=g=>g.ads.some(okAd);
+function bindFilters(rerender){
+  const q=$("#q");q&&(q.oninput=e=>{state.q=e.target.value;const pos=e.target.selectionStart;rerender();const n=$("#q");n.focus();n.setSelectionRange(pos,pos)});
+  const fs=$("#fs");fs&&(fs.onchange=e=>{state.status=e.target.value;rerender()});
+  const fc=$("#fc");fc&&(fc.onchange=e=>{state.camp=e.target.value;rerender()});
+  const t=$("#tiny");t&&(t.onchange=e=>{state.hideTiny=e.target.checked;rerender()});
+}
+const kpi=(l,v,s)=>`<div class="card kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s||""}</div></div>`;
+function kpiRow(m,r){return`<div class="grid kpis">${kpi("Spend",money(m.spend),num(m.impr)+" impressions")}${kpi("Clicks",num(m.linkClicks||m.clicks),"CTR "+pct(r.ctr,2)+" · CPC "+money(r.cpc))}${kpi("Engagement rate",pct(r.eng,2),num(m.engagement)+" engagements")}${kpi(RESLBL,num(m[RESKEY]),"CPA "+money(r.cpa)+" · CVR "+pct(r.cvr,1))}${kpi("ROAS",x2(r.roas),"Revenue "+money(m.value)+" · AOV "+money(r.aov))}${kpi("Hook rate",pct(VBASE.hook),"video 3s plays ÷ impr.")}</div>`}
+
+/* ------------------------------------------------------------------ tab: Creatives */
+function renderCreatives(){
+  const list=D.creatives.filter(okGroup).map(g=>g),working=list.filter(g=>g.v.k==="win").sort((a,b)=>b.m.spend-a.m.spend),losing=list.filter(g=>g.v.k==="lose").sort((a,b)=>b.m.spend-a.m.spend);
+  const vids=list.filter(g=>g.fmt==="Video"&&g.m.plays3s>0);
+  $("#main").innerHTML=`${kpiRow(ALL,BASE)}
+  <section class="sec"><h2>Creatives</h2><p class="sub">One row per creative: every ad with the same Ad number is combined across ad sets, copies, versions and placements (${ads.length} ads → ${D.creatives.length} creatives). Missed one? Tick the rows and press Merge insights.</p>
+    ${filters()}${mergeBar("cr")}
+    ${table("creatives",list,{select:"cr",open:"cr",lead:leadCreative,leadLabel:"Creative",leadSort:g=>g.name})}</section>
+  <section class="sec"><h2>What's working and what's not</h2><p class="sub">Judged against the account average${T.cpa||T.roas||T.hookRate?" (or the targets set for this client)":""}: ${hasResults?(hasValue?"ROAS":"CPA"):"CTR"} first, then hook rate for video. Creatives with too little spend are marked "Too early".</p>
+    <div class="grid two"><div class="card"><h3 style="color:var(--win)">Working <span class="small">(${working.length})</span></h3>${miniList(working.slice(0,6))}</div>
+    <div class="card"><h3 style="color:var(--lose)">Not working <span class="small">(${losing.length})</span></h3>${miniList(losing.slice(0,6))}</div></div></section>
+  <section class="sec"><h2>Video retention</h2><p class="sub">Hook rate = share of impressions that played 3+ seconds. The 25 / 50 / 75 / 95 % columns are the share of those 3-second plays still watching at that point. A strong hook with a steep drop means the opening works but the body doesn't.</p>
+    ${vids.length?table("retention",vids,{open:"cr",lead:leadCreative,leadLabel:"Video creative",leadSort:g=>g.name,cols:["spend","hook","r25","r50","r75","r95","hold","avgw","ctr",hasValue?"roas":"cpa"]}):`<div class="card empty">No video plays in this range.</div>`}</section>`;
+  bindFilters(renderCreatives);
+}
+COLS.r25={l:"25%",v:g=>g.m.plays3s?g.r.r25:null,f:v=>pct(v,0),tip:"Share of 3s plays that reached 25% of the video"};
+COLS.r50={l:"50%",v:g=>g.m.plays3s?g.r.r50:null,f:v=>pct(v,0)};COLS.r75={l:"75%",v:g=>g.m.plays3s?g.r.r75:null,f:v=>pct(v,0)};
+COLS.r95={l:"95%",v:g=>g.m.plays3s?g.r.r95:null,f:v=>pct(v,0)};COLS.hold={l:"ThruPlay",v:g=>g.m.plays3s?g.r.hold:null,f:v=>pct(v,0),tip:"ThruPlays ÷ 3-second plays"};
+COLS.avgw={l:"Avg watch",v:g=>g.m.avgWatch||null,f:v=>v?v.toFixed(1)+"s":"–"};
+function miniList(list){
+  if(!list.length)return`<div class="small" style="padding:10px 0">None yet.</div>`;
+  return list.map(g=>`<div class="li" data-open="cr|${esc(g.key)}">${thumbHtml(g)}<div class="tx"><b>${esc(g.name)}</b><span class="small">${esc(g.v.why[0]||"")}</span><div class="small">${money(g.m.spend)} spent · ${num(g.m[RESKEY])} ${RESLBL.toLowerCase()} · ${esc(g.fmt)}</div></div>${chip(g.v)}</div>`).join("");
+}
+
+/* ------------------------------------------------------------------ tab: Ads (ad level) */
 function renderAds(){
-  const camps=[...new Set(ads.map(a=>a.campaign))].sort(),fmts=[...new Set(ads.map(a=>a.format))].sort();
-  const list=sortTable(filtered(),a=>a.m.spend);
-  if(!state.sel||!ads.some(a=>a.id===state.sel))state.sel=list[0]&&list[0].id;
-  $("#main").innerHTML=`<div class="ctrl">
-    <input type="search" id="q" placeholder="Search ads, copy, campaigns" value="${esc(state.q)}" style="min-width:220px">
-    <select id="fc"><option>All</option>${camps.map(c=>`<option ${state.camp===c?"selected":""}>${esc(c)}</option>`).join("")}</select>
-    <select id="ff"><option>All</option>${fmts.map(c=>`<option ${state.fmt===c?"selected":""}>${esc(c)}</option>`).join("")}</select>
-    <select id="fs">${["Active","Not active","All"].map(c=>`<option ${state.status===c?"selected":""}>${c}</option>`).join("")}</select>
-    <span class="small">${list.length} ads</span></div>
-    <div class="split"><div class="list" id="alist">${list.map(a=>`<button class="li" data-open="${esc(a.id)}" aria-current="${a.id===state.sel}" type="button">${thumbHtml(a)}<div class="tx"><b>${esc(a.name)}</b><span class="small">${esc(a.campaign)} · ${esc(a.adset)}</span></div>${chip(a.v)}</button>`).join("")||'<div class="empty">No ads match.</div>'}</div>
-    <div id="detail"></div></div>`;
-  $("#q").oninput=e=>{state.q=e.target.value;const pos=e.target.selectionStart;renderAds();const q=$("#q");q.focus();q.setSelectionRange(pos,pos)};
-  $("#fc").onchange=e=>{state.camp=e.target.value;renderAds()};$("#ff").onchange=e=>{state.fmt=e.target.value;renderAds()};$("#fs").onchange=e=>{state.status=e.target.value;renderAds()};
-  renderDetail();
+  const list=ads.filter(okAd);
+  $("#main").innerHTML=`<section class="sec" style="margin-top:0"><h2>Ads</h2><p class="sub">Every ad exactly as it runs in Meta (one row per ad per ad set). Tick ads that belong together and press Merge insights to treat them as one creative.</p>
+    ${filters()}${mergeBar("ad")}
+    ${table("ads",list.map(a=>({...a,key:a.id,r:rates(a.m),v:verdict(a.m,a.p.fmt==="Video"),fmt:a.p.fmt,thumb:a.thumb})),{select:"ad",open:"ad",lead:leadAd,leadLabel:"Ad",leadSort:a=>a.name})}</section>`;
+  bindFilters(renderAds);
 }
-const CTAS={SHOP_NOW:"Shop now",LEARN_MORE:"Learn more",SIGN_UP:"Sign up",BUY_NOW:"Buy now",ORDER_NOW:"Order now",GET_OFFER:"Get offer",SUBSCRIBE:"Subscribe",CONTACT_US:"Contact us",BOOK_TRAVEL:"Book now",NO_BUTTON:""};
+
+/* ------------------------------------------------------------------ tab: Creators */
+function renderCreators(){
+  const cr=D.creators.filter(c=>c.list.some(okGroup)),src=D.sources;
+  const unnamed=D.creatives.filter(g=>g.p.source==="Creator"&&!g.p.creator);
+  const row=s=>{const r=s.r;return`<div class="card"><h3>${esc(s.key)}</h3><div class="small" style="margin-bottom:8px">${s.list.length} creatives · ${s.ads.length} ads · ${pct(div(s.m.spend,ALL.spend),0)} of spend</div><div class="mgrid"><div><span>Spend</span><b>${money(s.m.spend)}</b></div><div><span>${RESLBL}</span><b>${num(s.m[RESKEY])}</b></div><div><span>CPA</span><b>${money(r.cpa)}</b></div><div><span>ROAS</span><b>${x2(r.roas)}</b></div><div><span>CTR</span><b>${pct(r.ctr,2)}</b></div><div><span>Eng. rate</span><b>${pct(r.eng,2)}</b></div></div></div>`};
+  $("#main").innerHTML=`<section class="sec" style="margin-top:0"><h2>Creators vs brand</h2><p class="sub">Who is speaking in the ad: a creator (whitelisted / UGC) or the brand itself.</p><div class="grid two">${src.map(row).join("")}</div></section>
+  <section class="sec"><h2>Creators</h2><p class="sub">Every creative a creator appears in, combined. Click a row to see their creatives.</p>
+    ${unnamed.length?`<div class="note" style="margin-bottom:10px">${unnamed.length} creator-style creatives have no creator name that could be read from the ad name, so they sit under "Creator (unnamed)". Add the handle to <span class="mono">meta_creators</span> in clients.json (or put @handle in the ad name) to split them out.</div>`:""}
+    ${filters()}
+    ${table("creators",cr,{lead:s=>`<b>${esc(s.key)}</b><div class="small">${s.list.length} creatives · ${s.ads.length} ads</div>`,leadLabel:"Creator",leadSort:s=>s.key,open:null,
+      rowAttr:s=>`data-creator="${esc(s.key)}" style="cursor:pointer"`,
+      after:s=>state.openCreators.has(s.key)?`<tr class="sub"><td colspan="30">${s.list.slice().sort((a,b)=>b.m.spend-a.m.spend).map(g=>`<div class="li" data-open="cr|${esc(g.key)}">${thumbHtml(g)}<div class="tx"><b>${esc(g.name)}</b><span class="small">${money(g.m.spend)} · ${num(g.m[RESKEY])} ${RESLBL.toLowerCase()} · ROAS ${x2(g.r.roas)} · CPA ${money(g.r.cpa)}</span></div>${chip(g.v)}</div>`).join("")}</td></tr>`:""})}</section>`;
+  bindFilters(renderCreators);
+}
+
+/* ------------------------------------------------------------------ tab: Hooks & formats */
+function renderHooks(){
+  const hooks=D.hooks.filter(h=>h.list.some(okGroup));
+  const small=(id,rows,label)=>table(id,rows,{lead:s=>`<b>${esc(s.key)}</b><div class="small">${s.list.length} creatives</div>`,leadLabel:label,leadSort:s=>s.key,sort:"spend",
+    cols:["spend","clicks","ctr","eng","purch","cpa","roas","aov","cvr","hook"]});
+  $("#main").innerHTML=`<section class="sec" style="margin-top:0"><h2>Hooks</h2><p class="sub">Creatives are grouped by the hook in the ad name (the opening line). Where the name has no hook the first line of the ad copy is used. Hook rate only counts video.</p>
+    ${filters()}
+    ${table("hooks",hooks,{lead:s=>`<b>${esc(s.label)}</b><div class="small">${s.list.length} creatives · ${s.ads.length} ads</div>`,leadLabel:"Hook",leadSort:s=>s.label,cols:["spend","clicks","ctr","eng","purch","cpa","roas","aov","cvr","hook"]})}</section>
+  <section class="sec"><h2>By format</h2>${small("fmts",D.fmts,"Format")}</section>
+  <section class="sec"><h2>By SKU</h2><p class="sub">SKU is read from the ad name (${Object.values(SKUS).join(", ")}).</p>${small("skus",D.skus,"SKU")}</section>`;
+  bindFilters(renderHooks);
+}
+
+/* ------------------------------------------------------------------ tab: Black Friday */
+function renderBF(){
+  const bf=D.creatives.filter(g=>g.bf),nb=D.creatives.filter(g=>!g.bf);
+  if(!bf.length){$("#main").innerHTML=`<div class="card empty"><h3>No Black Friday ads found</h3><p>An ad counts as Black Friday when its <b>name</b> contains "BlackFriday" or "BF" (for example <span class="mono">Ad701_Static_Brand_Baby_BF_Bundle_V1</span>). None of the ${ads.length} ads in this range do yet.</p></div>`;return}
+  const bAds=bf.flatMap(g=>g.ads),nAds=nb.flatMap(g=>g.ads),bm=agg(bAds),nm=agg(nAds),br=rates(bm),nr=rates(nm);
+  const early=bm.spend<MIN_SPEND||bm.impr<MIN_IMPR;
+  const metrics=[["ROAS","roas",1,x2],["CPA","cpa",0,money],["AOV","aov",1,money],["CTR","ctr",1,v=>pct(v,2)],["CPC","cpc",0,money],["CPM","cpm",0,money],["Engagement rate","eng",1,v=>pct(v,2)],["Conversion rate","cvr",1,v=>pct(v,1)],["Hook rate (video)","hook",1,v=>pct(v,1)],["ThruPlay rate (video)","hold",1,v=>pct(v,1)]];
+  const delta=(b,n,hi)=>{if(b==null||n==null||!n)return`<span class="flat">–</span>`;const d=(b-n)/n,good=hi?d>0:d<0;return`<span class="${Math.abs(d)<.03?"flat":good?"up":"down"}">${d>0?"+":""}${(d*100).toFixed(0)}%</span>`};
+  const key=hasValue?"roas":"cpa",hi=hasValue?1:0,bv=br[key],nv=nr[key];
+  const better=bv!=null&&nv!=null&&(hi?bv>nv*1.05:bv<nv*.95),worse=bv!=null&&nv!=null&&(hi?bv<nv*.95:bv>nv*1.05);
+  const headline=early?`Too early to call: Black Friday ads have only ${money(bm.spend)} spend and ${num(bm.impr)} impressions so far.`
+    :`Black Friday creatives are ${better?"beating":worse?"behind":"in line with"} normal creatives on ${hasValue?"ROAS":"CPA"}: ${hasValue?x2(bv)+" vs "+x2(nv):money(bv)+" vs "+money(nv)}, on ${pct(div(bm.spend,ALL.spend),0)} of total spend.`;
+  const fm=[...new Set(ads.map(a=>a.p.fmt))].map(f=>{const b=agg(bAds.filter(a=>a.p.fmt===f)),n=agg(nAds.filter(a=>a.p.fmt===f));return{f,b,n,br:rates(b),nr:rates(n)}}).filter(x=>x.b.spend>0&&x.n.spend>0);
+  const vsn=g=>{if(g.m.spend<MIN_SPEND||g.m.impr<MIN_IMPR)return{k:"early",label:"Too early"};const a=hasValue?g.r.roas:g.r.cpa,b=hasValue?nr.roas:nr.cpa;if(a==null||!b)return{k:"avg",label:"No result yet"};
+    const q=hasValue?a/b:b/a;return q>=1.1?{k:"win",label:"Beating normal"}:q<=.9?{k:"lose",label:"Behind normal"}:{k:"avg",label:"On par"}};
+  bf.forEach(g=>g.v2=vsn(g));
+  $("#main").innerHTML=`<section class="sec" style="margin-top:0"><h2>Black Friday vs normal creatives</h2>
+    <div class="card" style="border-left:4px solid var(--bf)"><b>${esc(headline)}</b><div class="small" style="margin-top:4px">${bf.length} Black Friday creatives (${bAds.length} ads) vs ${nb.length} normal creatives (${nAds.length} ads). Black Friday = "BlackFriday" or "BF" in the ad name. ${esc(DATA.dateRange)} window: Black Friday ads usually have fewer live days, so rates (not totals) are compared.</div></div>
+    <div class="grid kpis" style="margin-top:12px">${kpi("BF spend",money(bm.spend),pct(div(bm.spend,ALL.spend),0)+" of account")}${kpi("BF clicks",num(bm.linkClicks||bm.clicks),"CTR "+pct(br.ctr,2))}${kpi("BF eng. rate",pct(br.eng,2),"normal "+pct(nr.eng,2))}${kpi("BF "+RESLBL.toLowerCase(),num(bm[RESKEY]),"CPA "+money(br.cpa))}${kpi("BF ROAS",x2(br.roas),"normal "+x2(nr.roas))}</div></section>
+  <section class="sec"><h2>Side by side</h2><div class="tscroll"><table><thead><tr><th class="nosort">Metric</th><th class="nosort">Black Friday</th><th class="nosort">Normal</th><th class="nosort">Difference</th></tr></thead><tbody>
+    ${metrics.map(([l,k,hi2,f])=>`<tr><td>${l}</td><td>${f(br[k])}</td><td>${f(nr[k])}</td><td>${delta(br[k],nr[k],hi2)}</td></tr>`).join("")}
+    <tr><td>Spend</td><td>${money(bm.spend)}</td><td>${money(nm.spend)}</td><td></td></tr><tr><td>${RESLBL}</td><td>${num(bm[RESKEY])}</td><td>${num(nm[RESKEY])}</td><td></td></tr></tbody></table></div></section>
+  ${fm.length?`<section class="sec"><h2>Like for like, by format</h2><p class="sub">Black Friday against normal creatives of the same format, so a static isn't judged against a video.</p><div class="tscroll"><table><thead><tr><th class="nosort">Format</th><th class="nosort">BF spend</th><th class="nosort">BF ROAS</th><th class="nosort">Normal ROAS</th><th class="nosort">ROAS diff</th><th class="nosort">BF CPA</th><th class="nosort">Normal CPA</th><th class="nosort">CPA diff</th></tr></thead><tbody>
+    ${fm.map(x=>`<tr><td>${esc(x.f)}</td><td>${money(x.b.spend)}</td><td>${x2(x.br.roas)}</td><td>${x2(x.nr.roas)}</td><td>${delta(x.br.roas,x.nr.roas,1)}</td><td>${money(x.br.cpa)}</td><td>${money(x.nr.cpa)}</td><td>${delta(x.br.cpa,x.nr.cpa,0)}</td></tr>`).join("")}</tbody></table></div></section>`:""}
+  <section class="sec"><h2>Black Friday creatives</h2><p class="sub">"vs normal" compares each one with the average of all non-Black-Friday creatives (${hasValue?"ROAS "+x2(nr.roas):"CPA "+money(nr.cpa)}).</p>
+    ${table("bf",bf,{open:"cr",lead:leadCreative,leadLabel:"Creative",leadSort:g=>g.name,verdict:true,extra:[{k:"vsn",l:"vs normal",h:g=>`<span class="chip v-${g.v2.k}">${g.v2.label}</span>`}]})}</section>`;
+}
+
+/* ------------------------------------------------------------------ tab: Campaigns */
+function renderCampaigns(){
+  const rows=groupBy(ads,a=>a.campaign,(c,l)=>{const m=agg(l);return{key:c,ads:l,m,r:rates(m),v:verdict(m,false)}});
+  const d=DATA.daily||[],maxS=Math.max(...d.map(x=>x.spend),1),W=640,H=120;
+  const pts=d.map((x,i)=>[d.length>1?i/(d.length-1)*(W-20)+10:W/2,H-18-(x.spend/maxS)*(H-34)]);
+  $("#main").innerHTML=`${kpiRow(ALL,BASE)}
+  ${d.length>1?`<section class="sec"><h2>Daily spend</h2><div class="card"><svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Daily spend"><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="${pts.map(p=>p.join(",")).join(" ")}"/><text x="10" y="12">${money(maxS)}</text><text x="10" y="${H-4}">${esc(d[0].date)}</text><text x="${W-10}" y="${H-4}" text-anchor="end">${esc(d[d.length-1].date)}</text></svg></div></section>`:""}
+  <section class="sec"><h2>Campaigns</h2>${table("camps",rows,{lead:s=>`<b>${esc(s.key)}</b><div class="small">${s.ads.length} ads</div>`,leadLabel:"Campaign",leadSort:s=>s.key,verdict:false,cols:["spend","impr","clicks","ctr","eng","purch","cpa","roas","rev","aov","cvr","cpc","cpm"]})}</section>`;
+}
+
+/* ------------------------------------------------------------------ detail drawer (ad or creative) */
+function funnel(m){
+  const r=rates(m);if(!m.plays3s)return`<div class="small">No video plays recorded.</div>`;
+  const rows=[["Impressions",1,num(m.impr),"var(--f5)"],["3s plays",m.plays3s/m.impr,pct(r.hook)+" of impr.","var(--f1)"],["25% watched",r.r25*m.plays3s/m.impr,pct(r.r25)+" of 3s","var(--f2)"],["50% watched",r.r50*m.plays3s/m.impr,pct(r.r50)+" of 3s","var(--f3)"],["75% watched",r.r75*m.plays3s/m.impr,pct(r.r75)+" of 3s","var(--f4)"],["95% watched",r.r95*m.plays3s/m.impr,pct(r.r95)+" of 3s","var(--f5)"],["ThruPlay",r.hold*m.plays3s/m.impr,pct(r.hold)+" of 3s","var(--f3)"]];
+  const max=Math.max(...rows.map(x=>x[1]),.0001);
+  return`<div class="funnel">${rows.map(([l,w,t,c])=>`<div class="frow"><span>${l}</span><div class="bar"><i style="width:${Math.max(2,w/max*100)}%;background:${c}"></i></div><b>${t}</b></div>`).join("")}</div>`;
+}
+const CTAS={SHOP_NOW:"Shop now",LEARN_MORE:"Learn more",SIGN_UP:"Sign up",BUY_NOW:"Buy now",ORDER_NOW:"Order now",GET_OFFER:"Get offer",SUBSCRIBE:"Subscribe",CONTACT_US:"Contact us",NO_BUTTON:""};
 const cta=c=>c in CTAS?CTAS[c]:String(c||"").toLowerCase().replace(/_/g," ").replace(/^./,x=>x.toUpperCase());
-function renderDetail(){
-  const a=ads.find(x=>x.id===state.sel),el=$("#detail");
-  if(!a){el.innerHTML=`<div class="card empty">Pick an ad.</div>`;return}
-  const r=a.r,host=(a.url||DATA.domain||"").replace(/^https?:\/\//,"").split("/")[0];
-  const page=(DATA.account&&DATA.account.name)||DATA.client;
-  const bodies=(a.variants&&a.variants.bodies||[]).filter(b=>b&&b!==a.body),titles=(a.variants&&a.variants.titles||[]).filter(b=>b&&b!==a.title);
-  el.innerHTML=`<div class="grid" style="gap:14px">
-    <div class="card"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><div><h3>${esc(a.name)}</h3><div class="small">${esc(a.campaign)} › ${esc(a.adset)} · ${esc(a.status.toLowerCase().replace(/_/g," "))}</div></div>${chip(a.v)}</div>
-      <p class="small" style="margin:8px 0 0">${a.v.why.map(esc).join(" · ")}</p></div>
-    <div class="grid two" style="gap:14px;align-items:start">
-      <div class="fb"><div class="h"><div class="av">${esc((page||"?")[0])}</div><div><b>${esc(page)}</b><div class="small">Sponsored</div></div></div>
-        <div class="pt">${esc(a.body||"")}</div>
-        <div class="md">${a.thumb?`<img src="${esc(a.thumb)}" alt="">`:`<span>${a.format==="Video"?"▶ video (no thumbnail)":"no image"}</span>`}</div>
-        <div class="ct"><div style="min-width:0"><span class="u">${esc(host)}</span><b>${esc(a.title||"")}</b><span class="small">${esc(a.description||"")}</span></div>${cta(a.cta)?`<span class="btn">${esc(cta(a.cta))}</span>`:""}</div></div>
-      <div class="grid" style="gap:12px">
-        <div class="card"><h3 style="margin-bottom:8px">Performance <span class="small">${esc(DATA.dateRange)}</span></h3><div class="mgrid">
-          <div><span>Spend</span><b>${money(a.m.spend)}</b></div><div><span>Impressions</span><b>${num(a.m.impr)}</b></div>
-          <div><span>CTR (link)</span><b>${pct(r.ctr,2)}</b></div><div><span>CPC</span><b>${r.cpc==null?"–":money(r.cpc)}</b></div>
-          <div><span>Results</span><b>${num(a.m.results)}</b></div><div><span>CPA</span><b>${r.cpa==null?"–":money(r.cpa)}</b></div>
-          <div><span>ROAS</span><b>${r.roas==null?"–":r.roas.toFixed(2)}</b></div><div><span>CPM</span><b>${r.cpm==null?"–":money(r.cpm)}</b></div></div></div>
-        ${a.format==="Video"?`<div class="card"><h3 style="margin-bottom:8px">Video retention${a.videoLength?` <span class="small">${a.videoLength}s video</span>`:""}</h3>${funnel(a.m)}</div>`:""}
-        <div class="card small">${[a.previewLink?`<a href="${esc(a.previewLink)}" target="_blank" rel="noopener">Open Meta preview</a>`:"",a.permalink?`<a href="${esc(a.permalink)}" target="_blank" rel="noopener">View post</a>`:"",a.url?`<a href="${esc(a.url)}" target="_blank" rel="noopener">Landing page</a>`:""].filter(Boolean).join(" · ")||"No preview links for this ad."}
-          ${bodies.length||titles.length?`<div style="margin-top:8px"><b>Other tested copy</b>${bodies.concat(titles).slice(0,8).map(t=>`<div>${esc(t)}</div>`).join("")}</div>`:""}</div>
-      </div></div>
-    <section class="card" id="cbox" hidden></section></div>`;
-  loadComments(a);
+/* Catalog ads store "{{product.name}}" placeholders: Meta fills them per viewer from the product feed. Show that instead of raw braces. */
+const dyn=t=>esc(t).replace(/\{\{\s*product\.(\w+)\s*\}\}/g,(_,f)=>`<span class="dyn">Product ${esc(f)}</span>`);
+const isDyn=a=>/\{\{[^}]*\}\}/.test((a.body||"")+(a.title||""))||a.p.fmt==="Catalog";
+function mock(a){
+  const page=(DATA.account&&DATA.account.name)||DATA.client,host=(a.url||DATA.domain||"").replace(/^https?:\/\//,"").split("/")[0];
+  return`<div class="fb"><div class="h"><div class="av">${esc((page||"?")[0])}</div><div><b>${esc(page)}</b><div class="small">Sponsored</div></div></div>
+    <div class="pt">${dyn(a.body||"")}</div>
+    <div class="md">${a.thumb?`<img src="${esc(a.thumb)}" alt="">`:`<span>${a.p.fmt==="Video"?"▶ video (no thumbnail)":a.p.fmt==="Catalog"?"Catalog ad: product images come from your feed":"no image"}</span>`}</div>
+    <div class="ct"><div style="min-width:0"><span class="u">${esc(host)}</span><b>${dyn(a.title||"")}</b><span class="small">${dyn(a.description||"")}</span></div>${cta(a.cta)?`<span class="btn2">${esc(cta(a.cta))}</span>`:""}</div></div>
+    ${isDyn(a)?`<p class="small">Catalog / dynamic ad: Meta fills the highlighted fields and the images from the product feed for each viewer, so what people see varies. Use "Live Meta preview" below for Meta's own render.</p>`:""}`;
 }
-$("#main").addEventListener("click",e=>{
-  const o=e.target.closest("[data-open]");if(!o)return;
-  state.sel=o.dataset.open;state.tab="ads";store.set("tab","ads");try{history.replaceState(null,"","#ad-"+state.sel)}catch(x){}render();window.scrollTo({top:0});
-});
+function metricsGrid(m){const r=rates(m);return`<div class="mgrid"><div><span>Spend</span><b>${money(m.spend)}</b></div><div><span>Impressions</span><b>${num(m.impr)}</b></div><div><span>Clicks</span><b>${num(m.linkClicks||m.clicks)}</b></div><div><span>CTR</span><b>${pct(r.ctr,2)}</b></div><div><span>Eng. rate</span><b>${pct(r.eng,2)}</b></div><div><span>${RESLBL}</span><b>${num(m[RESKEY])}</b></div><div><span>CPA</span><b>${money(r.cpa)}</b></div><div><span>ROAS</span><b>${x2(r.roas)}</b></div><div><span>Revenue</span><b>${money(m.value)}</b></div><div><span>AOV</span><b>${money(r.aov)}</b></div><div><span>CVR</span><b>${pct(r.cvr,1)}</b></div><div><span>CPC</span><b>${money(r.cpc)}</b></div></div>`}
+function openDrawer(kind,id){
+  state.open={kind,id};const dr=$("#drawer");
+  let g,a,title,sub,m,v,cmtKey;
+  if(kind==="cr"){g=D.byKey[id];if(!g)return;a=g.rep;title=g.name;m=g.m;v=g.v;cmtKey="c:"+g.key;
+    sub=`${g.p.num?"Ad"+g.p.num+" · ":""}${g.ads.length} ad${g.ads.length>1?"s":""} in ${g.adsets} ad set${g.adsets>1?"s":""}`}
+  else{a=D.adById[id];if(!a)return;title=a.name;m=a.m;v=verdict(a.m,a.p.fmt==="Video");cmtKey=a.id;sub=a.campaign+" › "+a.adset}
+  const members=kind==="cr"&&g.ads.length>1?`<div class="card"><h3 style="margin-bottom:6px">Ads in this creative</h3><div class="tscroll" style="max-height:260px"><table><thead><tr><th class="nosort">Ad</th><th class="nosort">Spend</th><th class="nosort">${RESLBL}</th><th class="nosort">ROAS</th></tr></thead><tbody>${g.ads.slice().sort((x,y)=>y.m.spend-x.m.spend).map(x=>{const r=rates(x.m);return`<tr data-open="ad|${esc(x.id)}"><td class="lead"><b>${esc(x.name)}</b><div class="small">${esc(x.campaign)} › ${esc(x.adset)}</div></td><td>${money(x.m.spend)}</td><td>${num(x.m[RESKEY])}</td><td>${x2(r.roas)}</td></tr>`}).join("")}</tbody></table></div>${g.manual?`<p style="margin:8px 0 0"><button class="btn alt" data-unmerge="${esc(g.key.slice(2))}">Unmerge these ads</button></p>`:""}</div>`:"";
+  dr.innerHTML=`<button class="btn alt x" data-close type="button">Close ✕</button>
+    <div class="grid" style="gap:12px;clear:both">
+    <div class="card"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><div><h3>${esc(title)}</h3><div class="small">${esc(sub)}</div><div style="margin-top:4px">${tags(a.p)}${(kind==="cr"?g.bf:a.p.bf)?'<span class="chip v-bf">Black Friday</span>':""}</div></div>${chip(v)}</div><p class="small" style="margin:8px 0 0">${v.why.map(esc).join(" · ")}</p></div>
+    ${mock(a)}
+    <div class="card"><h3 style="margin-bottom:8px">Performance <span class="small">${esc(DATA.dateRange)}</span></h3>${metricsGrid(m)}</div>
+    ${m.plays3s?`<div class="card"><h3 style="margin-bottom:8px">Video retention${a.videoLength?` <span class="small">${a.videoLength}s video</span>`:""}</h3>${funnel(m)}</div>`:""}
+    ${members}
+    <div class="card"><h3 style="margin-bottom:8px">Live Meta preview</h3><div class="ctrl" style="margin-top:0"><select id="pfmt"><option value="MOBILE_FEED_STANDARD">Facebook mobile feed</option><option value="DESKTOP_FEED_STANDARD">Facebook desktop feed</option><option value="INSTAGRAM_STANDARD">Instagram feed</option><option value="INSTAGRAM_STORY">Instagram story</option><option value="INSTAGRAM_REELS">Instagram reels</option></select><button class="btn" id="pload" data-ad="${esc(a.id)}" type="button">Load preview</button></div><div id="pbox" class="small">Meta renders this live, including catalog ads. ${a.previewLink?`<a href="${esc(a.previewLink)}" target="_blank" rel="noopener">Open shareable preview link</a>`:""}</div>
+      <p class="small" style="margin:8px 0 0">${[a.permalink?`<a href="${esc(a.permalink)}" target="_blank" rel="noopener">View post</a>`:"",a.url?`<a href="${esc(a.url)}" target="_blank" rel="noopener">Landing page</a>`:""].filter(Boolean).join(" · ")}</p></div>
+    <section class="card" id="cbox" hidden></section></div>`;
+  dr.classList.add("open");dr.scrollTop=0;loadComments(cmtKey);
+  try{history.replaceState(null,"","#"+kind+"-"+encodeURIComponent(id))}catch(e){}
+}
+function closeDrawer(){state.open=null;$("#drawer").classList.remove("open");try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}}
 
 /* ------------------------------------------------------------------ comments (same endpoints as the Google dashboards) */
-const cm={on:null,byAd:{},draft:{}};
+const cm={on:null,by:{},draft:{},cur:""};
 const CAPI=["api/notes","api/comments"];
 const whenText=iso=>{const d=new Date(iso);return isNaN(d)?iso:d.toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})};
-function commentInner(ad,list){
-  return `<h3>Comments <span class="small">${list.length}</span></h3>
-    <form class="cform" data-ad="${esc(ad.id)}"><label class="sr" for="cName">Your name</label><input id="cName" name="name" maxlength="80" placeholder="Your name" value="${esc(store.get("commentName",""))}">
-    <label class="sr" for="cText">Comment</label><textarea id="cText" name="text" maxlength="2000" rows="3" placeholder="Add a comment on this creative">${esc(cm.draft[ad.id]||"")}</textarea>
-    <div class="row"><button type="submit" class="cbtn">Add comment</button><span class="cstat small" role="status"></span></div></form>
+function commentInner(key,list){
+  return`<h3>Comments <span class="small">${list.length}</span></h3><form class="cform" data-ad="${esc(key)}"><label class="sr" for="cName">Your name</label><input id="cName" name="name" maxlength="80" placeholder="Your name" value="${esc(store.get("commentName",""))}">
+    <label class="sr" for="cText">Comment</label><textarea id="cText" name="text" maxlength="2000" rows="3" placeholder="Add a comment on this creative">${esc(cm.draft[key]||"")}</textarea>
+    <div class="row"><button type="submit" class="btn">Add comment</button><span class="cstat small" role="status"></span></div></form>
     ${list.length?`<ul class="clist">${list.map(c=>`<li><div class="chead"><b>${esc(c.name)}</b><span>${esc(whenText(c.at))}</span></div><p>${esc(c.text)}</p></li>`).join("")}</ul>`:`<p class="small">No comments yet.</p>`}`;
 }
-function fillComments(ad){const b=$("#cbox");if(!b||state.sel!==ad.id)return;b.innerHTML=commentInner(ad,cm.byAd[ad.id]);b.hidden=false}
-function loadComments(ad,attempt=0){
-  if(cm.on===false)return;if(cm.byAd[ad.id]){fillComments(ad);return}
-  fetch(CAPI[attempt%2]+"?ad="+encodeURIComponent(ad.id),{cache:"no-store"}).then(r=>r.ok?r.json():Promise.reject(r.status))
-    .then(j=>{cm.on=true;cm.byAd[ad.id]=j.comments||[];fillComments(ad)})
-    .catch(why=>{if(why===404&&attempt>=1){cm.on=false;return}if(attempt<3)setTimeout(()=>loadComments(ad,attempt+1),600*(attempt+1))});
+function fillComments(key){const b=$("#cbox");if(!b||cm.cur!==key)return;b.innerHTML=commentInner(key,cm.by[key]);b.hidden=false}
+function loadComments(key,attempt=0){
+  cm.cur=key;if(cm.on===false)return;if(cm.by[key]){fillComments(key);return}
+  fetch(CAPI[attempt%2]+"?ad="+encodeURIComponent(key),{cache:"no-store"}).then(r=>r.ok?r.json():Promise.reject(r.status))
+    .then(j=>{cm.on=true;cm.by[key]=j.comments||[];fillComments(key)})
+    .catch(why=>{if(why===404&&attempt>=1){cm.on=false;return}if(attempt<3)setTimeout(()=>loadComments(key,attempt+1),600*(attempt+1))});
 }
-$("#main").addEventListener("input",e=>{const f=e.target.closest(".cform");if(!f)return;if(e.target.name==="text")cm.draft[f.dataset.ad]=e.target.value;if(e.target.name==="name")store.set("commentName",e.target.value)});
-$("#main").addEventListener("submit",e=>{
+document.addEventListener("input",e=>{const f=e.target.closest&&e.target.closest(".cform");if(!f)return;if(e.target.name==="text")cm.draft[f.dataset.ad]=e.target.value;if(e.target.name==="name")store.set("commentName",e.target.value)});
+document.addEventListener("submit",e=>{
   const f=e.target.closest(".cform");if(!f)return;e.preventDefault();
-  const ad=ads.find(a=>a.id===f.dataset.ad),stat=f.querySelector(".cstat"),btn=f.querySelector(".cbtn");
-  const name=f.elements.name.value.trim(),text=f.elements.text.value.trim();
+  const key=f.dataset.ad,stat=f.querySelector(".cstat"),btn=f.querySelector(".btn"),name=f.elements.name.value.trim(),text=f.elements.text.value.trim();
   if(!name){stat.textContent="Add your name first.";return}if(!text){stat.textContent="Write a comment first.";return}
   btn.disabled=true;stat.textContent="Saving…";
-  const send=u=>fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ad:ad.id,name,text})});
+  const send=u=>fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ad:key,name,text})});
   send(CAPI[0]).catch(()=>send(CAPI[1])).then(r=>r.json().then(j=>r.ok?j:Promise.reject(j.error||"Couldn't save the comment.")))
-    .then(j=>{cm.byAd[ad.id]=j.comments||[];cm.draft[ad.id]="";fillComments(ad);const s=$("#cbox .cstat");if(s)s.textContent="Comment added."})
+    .then(j=>{cm.by[key]=j.comments||[];cm.draft[key]="";fillComments(key);const s=$("#cbox .cstat");if(s)s.textContent="Comment added."})
     .catch(err=>{btn.disabled=false;stat.textContent=typeof err==="string"?err:"Couldn't save the comment."});
 });
 
-/* ------------------------------------------------------------------ campaigns */
-function renderCampaigns(){
-  const byC=new Map();ads.forEach(a=>{if(!byC.has(a.campaign))byC.set(a.campaign,[]);byC.get(a.campaign).push(a)});
-  const rows=sortTable([...byC].map(([c,list])=>({c,list,m:agg(list),obj:list[0].objective})),x=>x.m.spend);
-  const d=DATA.daily||[],maxS=Math.max(...d.map(x=>x.spend),1),W=640,H=120;
-  const pts=d.map((x,i)=>[d.length>1?i/(d.length-1)*(W-20)+10:W/2,H-18-(x.spend/maxS)*(H-34)]);
-  $("#main").innerHTML=`
-  <div class="grid kpis">${kpi("Spend",money(ALL.spend),num(ALL.impr)+" impressions")}${kpi("Link clicks",num(ALL.linkClicks||ALL.clicks),"CTR "+pct(BASE.ctr,2))}${kpi("Results",num(ALL.results),BASE.cpa==null?"":"CPA "+money(BASE.cpa))}${kpi("Revenue",ALL.value?money(ALL.value):"–",BASE.roas==null?"":"ROAS "+BASE.roas.toFixed(2))}</div>
-  ${d.length>1?`<section class="sec"><h2>Daily spend</h2><div class="card"><svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Daily spend"><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="${pts.map(p=>p.join(",")).join(" ")}"/>
-    <text x="10" y="12">${money(maxS,0)}</text><text x="10" y="${H-4}">${esc(d[0].date)}</text><text x="${W-10}" y="${H-4}" text-anchor="end">${esc(d[d.length-1].date)}</text></svg></div></section>`:""}
-  <section class="sec"><h2>Campaigns</h2><div class="tscroll"><table><thead><tr><th>Campaign</th><th>Ads</th><th>Spend</th><th>Impr.</th><th>CTR</th><th>CPC</th><th>Results</th><th>CPA</th><th>ROAS</th></tr></thead><tbody>
-  ${rows.map(x=>{const r=rates(x.m);return `<tr><td class="name"><b>${esc(x.c)}</b><div class="small">${esc((x.obj||"").replace("OUTCOME_","").toLowerCase())}</div></td><td>${x.list.length}</td><td>${money(x.m.spend)}</td><td>${num(x.m.impr)}</td><td>${pct(r.ctr,2)}</td><td>${r.cpc==null?"–":money(r.cpc)}</td><td>${num(x.m.results)}</td><td>${r.cpa==null?"–":money(r.cpa)}</td><td>${r.roas==null?"–":r.roas.toFixed(2)}</td></tr>`}).join("")}
-  </tbody></table></div></section>`;
+/* ------------------------------------------------------------------ merges (shared on the server when it has storage, else this browser) */
+function loadMerges(done){
+  fetch("api/merges",{cache:"no-store"}).then(r=>r.ok?r.json():Promise.reject(r.status)).then(j=>{merges=j.merges||[];mergeShared=true;done()})
+    .catch(()=>{merges=store.get("merges",[]);mergeShared=false;done()});
+}
+function saveMerges(){
+  store.set("merges",merges);
+  fetch("api/merges",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({merges})}).then(r=>{mergeShared=r.ok}).catch(()=>{mergeShared=false});
+}
+function doMerge(kind){
+  const set=kind==="ad"?selAd:selCr,ids=new Set();
+  if(kind==="ad")set.forEach(id=>ids.add(id));else set.forEach(k=>D.byKey[k]&&D.byKey[k].ads.forEach(a=>ids.add(a.id)));
+  const nm=($("#mergeName")&&$("#mergeName").value.trim())||"Merged creative";
+  merges=merges.filter(g=>{if(g.ads.some(x=>ids.has(x))){g.ads.forEach(x=>ids.add(x));return false}return true});
+  merges.push({id:"g"+Date.now().toString(36),name:nm,ads:[...ids]});
+  selAd.clear();selCr.clear();saveMerges();rebuild();closeDrawer();render();
 }
 
+/* ------------------------------------------------------------------ events */
+document.addEventListener("click",e=>{
+  const t=e.target;
+  const tab=t.closest("[data-tab]");if(tab){state.tab=tab.dataset.tab;store.set("tab",state.tab);closeDrawer();render();return}
+  if(t.closest("[data-close]")){closeDrawer();return}
+  const sel=t.closest("[data-sel]");if(sel){const [k,id]=sel.dataset.sel.split("|");const set=k==="ad"?selAd:selCr;sel.checked?set.add(id):set.delete(id);render();return}
+  const mg=t.closest("[data-merge]");if(mg){doMerge(mg.dataset.merge);return}
+  const cl=t.closest("[data-clear]");if(cl){(cl.dataset.clear==="ad"?selAd:selCr).clear();render();return}
+  const um=t.closest("[data-unmerge]");if(um){merges=merges.filter(g=>g.id!==um.dataset.unmerge);saveMerges();rebuild();closeDrawer();render();return}
+  const so=t.closest("[data-sort]");if(so){const [id,k]=so.dataset.sort.split("|"),st=sorts[id]||(sorts[id]={k,asc:false});if(st.k===k)st.asc=!st.asc;else{st.k=k;st.asc=(k==="lead"||(COLS[k]&&COLS[k].low))}render();return}
+  const fm=t.closest("[data-fmt]");if(fm){state.fmt=fm.dataset.fmt;render();return}
+  const ce=t.closest("[data-creator]");if(ce&&!t.closest("[data-open]")){const k=ce.dataset.creator;state.openCreators.has(k)?state.openCreators.delete(k):state.openCreators.add(k);render();return}
+  const pl=t.closest("#pload");if(pl){const box=$("#pbox");box.textContent="Asking Meta for the preview…";
+    fetch("api/preview?ad="+encodeURIComponent(pl.dataset.ad)+"&format="+encodeURIComponent($("#pfmt").value),{cache:"no-store"}).then(r=>r.json().then(j=>r.ok?j:Promise.reject(j.error||"No preview")))
+      .then(j=>{box.innerHTML=`<iframe class="live" src="${esc(j.src)}" title="Meta ad preview" loading="lazy"></iframe>`}).catch(err=>{box.textContent="Couldn't load the preview: "+(typeof err==="string"?err:"request failed")});return}
+  const op=t.closest("[data-open]");if(op&&!t.closest("input,a,button")){const [k,id]=op.dataset.open.split("|");openDrawer(k,id)}
+});
+$("#theme").addEventListener("click",()=>{const d=document.documentElement,cur=d.dataset.theme||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");d.dataset.theme=cur==="dark"?"light":"dark";store.set("theme",d.dataset.theme)});
+{const th=store.get("theme",null);if(th)document.documentElement.dataset.theme=th}
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&state.open)closeDrawer()});
+
 /* ------------------------------------------------------------------ boot */
-function render(){renderHeader();({creative:renderCreative,ads:renderAds,campaigns:renderCampaigns}[state.tab]||renderCreative)()}
-{const m=location.hash.match(/^#ad-(.+)$/);if(m&&ads.some(a=>a.id===m[1])){state.sel=m[1];state.tab="ads"}}
-if(!ads.length)$("#main").innerHTML=`<div class="card empty">No ads were returned for this account in the selected range.</div>`;else render();
+const TABS=[["creatives","Creatives"],["ads","Ads"],["creators","Creators"],["hooks","Hooks & formats"],["bf","Black Friday"],["campaigns","Campaigns"]];
+function render(){
+  const acc=DATA.account||{};
+  $("#meta").innerHTML=[DATA.sample?'<span class="badge-sample">SAMPLE DATA, not real results</span>':"",`<span>Account <b>${esc(acc.name||acc.id||"")}</b></span>`,`<span>Range <b>${esc(DATA.dateRange)}</b></span>`,
+    `<span>${ads.length} ads → ${D.creatives.length} creatives</span>`,`<span>Pulled ${esc(DATA.pulledAt.replace("T"," ").slice(0,16))}</span>`].filter(Boolean).join("");
+  $("#tabs").innerHTML=TABS.map(([k,l])=>`<button class="tab ${k==="bf"?"bf":""}" role="tab" data-tab="${k}" aria-selected="${state.tab===k}">${l}</button>`).join("");
+  ({creatives:renderCreatives,ads:renderAds,creators:renderCreators,hooks:renderHooks,bf:renderBF,campaigns:renderCampaigns}[state.tab]||renderCreatives)();
+}
+if(!ads.length)$("#main").innerHTML=`<div class="card empty">No ads were returned for this account in the selected range.</div>`;
+else loadMerges(()=>{rebuild();render();const m=location.hash.match(/^#(cr|ad)-(.+)$/);if(m)openDrawer(m[1],decodeURIComponent(m[2]))});
 </script>
