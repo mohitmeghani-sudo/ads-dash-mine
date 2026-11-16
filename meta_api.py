@@ -48,7 +48,7 @@ INSIGHT_FIELDS = ",".join(["ad_id", "spend", "impressions", "reach", "frequency"
 # ----------------------------------------------------------------- credentials
 def _creds():
     clean = lambda v: (v or "").strip().strip("\"'").strip()
-    token = clean(os.environ.get("META_ACCESS_TOKEN"))
+    token = clean(os.environ.get("META_ACCESS_TOKEN") or os.environ.get("META"))  # "META" accepted as a short name
     account = clean(os.environ.get("META_AD_ACCOUNT_ID"))
     local = Path.home() / ".meta_creds.json"
     if not token and local.exists():
