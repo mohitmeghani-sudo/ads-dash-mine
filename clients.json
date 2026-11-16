@@ -1,0 +1,107 @@
+{
+  "tealium": {
+    "name": "Tealium",
+    "sheet_id": "1lMWQI2RECyNgFqwHZ6r2gs0WhA3EsOvj2uha9Qwu-70",
+    "domain": "tealium.com",
+    "account_prefix": "Tealium - ENG - ",
+    "business_name": "Tealium",
+    "live_url": "https://tealiumads.up.railway.app/tealium/",
+    "source": "api",
+    "login_customer_id": "9923720096",
+    "mcc_id": "7835049660",
+    "customer_ids": [
+      "6690510760",
+      "9413684678",
+      "2281287878"
+    ]
+  },
+  "oia": {
+    "name": "OIA",
+    "sheet_id": "1V_6OsdBZGJRclrSr_WSEfOcnex5Q3vd2anLpllsO7Cc",
+    "domain": "",
+    "account_prefix": "",
+    "source": "api",
+    "login_customer_id": "9923720096",
+    "mcc_id": "5717638537"
+  },
+  "mchale": {
+    "name": "McHale Landscaping",
+    "sheet_id": "1bUPZFes-tXHULtpCW0Ww0YrFQ0LRWnKoxFLRXlG_c5w",
+    "domain": "mchalelandscape.com",
+    "account_prefix": "",
+    "source": "api",
+    "login_customer_id": "9923720096",
+    "mcc_id": "9923720096",
+    "customer_ids": [
+      "2133861213"
+    ]
+  },
+  "soteri": {
+    "name": "Soteri Skin",
+    "domain": "soteriskin.com",
+    "account_prefix": "",
+    "source": "api",
+    "login_customer_id": "9923720096",
+    "mcc_id": "9923720096",
+    "customer_ids": [
+      "9557969390"
+    ]
+  },
+  "gd": {
+    "name": "42 North Dental",
+    "domain": "",
+    "account_prefix": "",
+    "source": "api",
+    "login_customer_id": "9923720096",
+    "mcc_id": "9923720096",
+    "account_names": [
+      "Gentle Dental",
+      "Great Hill Dental",
+      "Dynamic Dental",
+      "Southern Connecticut Dental Group",
+      "Dental Care Associates"
+    ],
+    "customer_ids": [
+      "9925296449"
+    ],
+    "slug": "42north"
+  },
+  "inspire": {
+    "name": "Inspire Aesthetics",
+    "domain": "",
+    "account_prefix": "",
+    "source": "api",
+    "login_customer_id": "9923720096",
+    "mcc_id": "9923720096",
+    "customer_ids": [
+      "1887900641",
+      "4092701899",
+      "6374556990",
+      "7395576762",
+      "2048733325",
+      "1105892184",
+      "1300586568",
+      "1472407899"
+    ],
+    "account_aliases": {
+      "Daniel I. Shapiro, M.D., P.C.": "Shapiro Plastic Surgery"
+    }
+  },
+  "burnout": {
+    "name": "Burnout Brands",
+    "domain": "",
+    "account_prefix": "",
+    "source": "api",
+    "login_customer_id": "9923720096",
+    "mcc_id": "9923720096",
+    "customer_ids": [
+      "2680354698",
+      "8577930930",
+      "6438492741",
+      "2016774320"
+    ],
+    "account_aliases": {
+      "1369614 B.C. LTD. (BD Engine Brake)": "BD Engine Brake"
+    }
+  }
+}

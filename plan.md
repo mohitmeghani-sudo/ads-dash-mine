@@ -1,0 +1,221 @@
+# Ad Preview Dashboard — Plan
+
+Goal: a shareable dashboard showing every live Google ad (RSA, Demand Gen, PMax)
+for a client — the raw assets **and** the combinations/previews Google renders
+(Search, Display, YouTube, Discover/Gmail), like the "Ad preview" panel in Google Ads.
+
+First client: **Tealium** — sheet `Tealium_AdCopies`
+(`1lMWQI2RECyNgFqwHZ6r2gs0WhA3EsOvj2uha9Qwu-70`, Supermetrics-refreshed,
+link-shared so it downloads directly as xlsx).
+
+## What the sheet actually contains (checked 2026-09-24)
+
+| Tab | Rows | Content |
+|---|---|---|
+| RSA and Demand Gen | 65 RSA + 22 Demand Gen + 4 empty | Account, campaign, 15 headlines, 4 descriptions, path 1/2, ad strength. Demand Gen rows add business name + 5 descriptions. |
+| Pmax | 3 asset groups (APAC / EMEA / NA) + 150 search-theme rows | 15 headlines, 5 long headlines, 5 descriptions, CTA, 4 YouTube video IDs, final URL, paths, status, ad strength. |
+
+**Gaps that affect previews**
+- RSA rows have **no ad group, ad ID, final URL, or pinning info** → display URL
+  has to fall back to `tealium.com/{path1}/{path2}`; pins can't be honored.
+- **No images/logos** anywhere (Demand Gen & PMax image columns are empty) →
+  Display/Discover previews can only use YouTube thumbnails or a placeholder.
+- Sitelinks / callouts / snippets columns are empty → Search previews show no extensions.
+
+## Phases
+
+- [x] **Phase 1 — Data layer.** `fetch.py` downloads the sheet, normalises into
+  `ads.json`: account → campaign → ad (type, headlines, descriptions, long
+  headlines, paths, CTA, videos, strength). Drop empty rows; attach search themes to PMax.
+- [x] **Phase 2 — Asset view.** Dashboard with filters (account, campaign, ad type,
+  ad strength) and per-ad asset lists with char counts.
+- [x] **Phase 3 — Combination previews.** For each ad, render Google-style previews:
+  - RSA: Search (desktop + mobile) — 3 headlines + 2 descriptions, shuffle / step through combos.
+  - PMax: Search, Display, YouTube, Discover, Gmail formats.
+  - Demand Gen: Discover, Gmail, YouTube formats.
+  Source of combinations = see decision below.
+- [~] **Phase 4 — Publish + refresh.** Published 2026-09-24: https://claude.ai/artifact/7twhTA9oxw8dU81Z7xwjLB
+  (`build.py` → dist/, copy to scratchpad, republish index.html; assets are URL-hashed so only new images need uploading). Daily auto-rebuild not set up yet. Publish as a claude.ai artifact; daily
+  refresh after Supermetrics runs.
+- [ ] **Phase 5 — More clients** (same sheet template per client).
+
+## Open decision — where combinations come from
+
+A. **Simulated** — generate combinations ourselves using Google's assembly rules
+   (character limits, 3H+2D, no duplicate headlines). Works today from the sheet.
+   Not what Google *actually* served.
+B. **Real** — Google's own top combinations (Assets → Combinations report;
+   API: `ad_group_ad_asset_combination_view` for RSA,
+   `asset_group_top_combination_view` for PMax). Needs a new data feed into the
+   sheet (Google Ads Script or Supermetrics query) since the current tabs don't have it.
+
+**Decided 2026-09-24: B first (real combinations).**
+
+### Phase 0 — Real-combination feed (done, pending schedule)
+- [x] `google-ads-script/export_combinations.js` — Google Ads Script, writes
+  `RSA Combinations` + `PMax Combinations` tabs into the ad-copy sheet
+  (RSA: every served combo w/ impressions, ranked; PMax: Google's top-20 per asset group).
+- [x] Installed at MCC (3 Tealium accounts: ANZ/ASIA 669-051-0760, EMEA, NAM). Runs in ~32s.
+  Runner needs **edit** access to the sheet (owned by supermetrics@position2.co.in).
+- [x] First run 2026-09-24: 959 RSA combos (44 ads, 17 ad groups) + 54 PMax combos
+  (3 asset groups × TEXT/IMAGE/VIDEO categories × top 6), with real image/logo URLs.
+- [x] Script now resolves sitelink (+ description lines), callout and snippet text — verified 2026-09-24, 0 unresolved assets.
+  Guarded: per-type lookups, never wipes tabs on empty result, auto-discovers MCC client accounts.
+- [ ] User schedules the script Daily (after ~9am IST Supermetrics refresh).
+  Note: only 13/959 RSA combos show a 3rd headline; Google mostly serves 2H + sitelinks.
+- Demand Gen: no combination API exists → shown as simulated previews, labelled as such.
+
+## Hosting on Railway (2026-09-24)
+- Deploys from `ai-positon2/Ad_Dashboard`. Railpack detects Python via `requirements.txt`; `railway.json` sets
+  start command `python main.py` and healthcheck `/healthz`.
+- `main.py` builds on boot, serves `dist/`, rebuilds every `REBUILD_HOURS` (default 3) — this is the daily refresh.
+- Optional `DASH_PASSWORD` env var puts the site behind a password (any username). The Railway URL is public otherwise.
+
+## Client feedback round 1 (2026-09-28)
+Feedback: drop the data-heavy overview (keep Account summary); show live headlines, descriptions,
+sitelinks/other assets, then images & videos; logo must be the account's real logo, not a made-up "T";
+show Google's own previews for PMax / Demand Gen if possible.
+
+- [x] **A. Simplify the page.** Remove the overview charts, impression-split strip and position heat grids;
+      asset panel becomes plain lists: headlines, descriptions, sitelinks, callouts, snippets, then images, logos, videos.
+- [x] **B. Real logos.** Per-account business logo (from Google's served assets); never a letter placeholder.
+- [~] **C. Live assets feed.** Script + build.py support done and tested on a synthetic tab; waiting for user to install/run. New standalone script `google-ads-script/export_assets.js` → `Live Assets` tab:
+      enabled RSA assets (with pins), Demand Gen ad assets (real images/logos), PMax asset-group assets,
+      sitelinks/callouts/snippets/logo/business name at account, campaign and ad-group level.
+      build.py uses it when present, falls back to today's sources otherwise.
+- [ ] **D. Google's own previews.** API finding: `ShareablePreviewService` gives real preview links for PMax
+      asset groups only (not Demand Gen, not RSA), links can't be embedded (X-Frame-Options: deny), and it is
+      not callable from Google Ads Scripts — needs full Google Ads API access (developer token + OAuth).
+      Decision needed from user.
+- [x] Live Assets script extended (2026-09-28): image extensions, prices, promotions, calls, apps. Served image
+      extensions shown for RSAs now (29 ads). Snippets only appear in 1 served combo → need the Live Assets tab.
+- [x] **D (interim).** Optional `Preview Links` tab (Campaign | Ad group | Ad ID | Format | URL | Created) →
+      "Google's preview" button per ad, flagged when older than 30 days (links are created with the 30-day option). Links open on Google (not embeddable).
+
+## Multi-client: OIA first (2026-10-06)
+One codebase, one Google Sheet + one Railway service per client. Rollout one client at a time.
+- [x] **1. Client config.** `clients.json` (name, sheet id, domain, account-name prefix). `build.py` picks the
+      client from the `CLIENT` env var or `python build.py <client>` (default tealium); output in `dist/<client>/`.
+      Page title/heading come from the config. Tab names matched case-insensitively ("URLs" = "URLS").
+- [x] **2. Supermetrics optional.** Without "RSA and Demand Gen" / "Pmax" tabs everything comes from the three
+      scripts; only ad strength and PMax search themes are missing.
+- [x] **3. OIA sheet.** Sheet (1V_6OsdBZGJRclrSr_WSEfOcnex5Q3vd2anLpllsO7Cc, 13 accounts) shared "anyone with
+      link can view"; user installs the 3 scripts (SPREADSHEET_URL → OIA sheet), runs once, schedules Daily.
+- [ ] **4. Build + check** OIA locally, publish a claude.ai preview, fix account-name prefix / logo issues.
+- [x] **5. Railway.** OIA live at https://superb-kindness-production-15ec.up.railway.app. New service from the same repo, env `CLIENT=oia`, own `DASH_PASSWORD`, shared `OPENAI_API_KEY`.
+- [x] Images resized to 800px WebP + parallel downloads (OIA originals were up to 5 MB); page served gzipped.
+      In-memory dry run: OIA 13 accounts / 13 logos / 78 preview links / 178 campaigns. Pushed 2026-10-07.
+
+## McHale Landscaping (2026-10-07)
+- [x] Added to `clients.json` (key `mchale`, sheet 1bUPZFes-tXHULtpCW0Ww0YrFQ0LRWnKoxFLRXlG_c5w). Local build OK:
+      6 RSA, 4 PMax, 6 DG, all with ad strength; 4 preview links matched; 12 campaigns.
+- [ ] Railway service with `CLIENT=mchale`.
+
+## Google Ads API source — OIA pilot (2026-10-13)
+Replace the Google Ads Scripts + Supermetrics tabs with direct Google Ads API reads (dev token + OAuth,
+Explorer access, MCC 9923720096). Pilot on OIA; once proven, move Tealium and McHale.
+Design: `gads_api.py` builds DataFrames with the SAME columns as the sheet tabs (RSA Combinations, PMax
+Combinations, Live Assets, Campaign Performance, plus ad strength / search themes in place of the Supermetrics
+tabs), so `build.py` and the dashboard stay unchanged. `clients.json` gets `"source": "api"` + `"customer_ids"` /
+`"mcc_id"`. The manual `URLS` preview-link tab still comes from the sheet. If API credentials are missing the
+build falls back to the sheet. Credentials: env vars (`GADS_CLIENT_ID/SECRET`, `GADS_DEVELOPER_TOKEN`,
+`GADS_REFRESH_TOKEN`, `GADS_LOGIN_CUSTOMER_ID`) or `~/.gads_creds.json` locally; never committed.
+- [x] **1. Discover OIA accounts** under the OIA MCC (13, matches the sheet); every query type works at Explorer access.
+- [x] **2. `gads_api.py`**: combinations, live assets, performance, ad strength/search themes. ~22 requests per account (275 for OIA, 76s).
+- [x] **3. Wire into `build.py`** (`source: api`), sheet fallback; OIA diffed against the sheet-based build: same 310 RSA + 79 PMax ads, identical headlines/descriptions/URLs/paths, ad strength now filled for all (110 were blank). Demand Gen verified on McHale.
+- [x] **4. Deploy** (2026-10-13): OIA live on the API. GADS_* kept once as Railway *Shared Variables* and attached to each service.
+- [~] **5. Roll out**: McHale switched to the API (diff vs sheet build: identical ads, copy, strengths, preview links). Tealium next.
+- [x] **6. Soteri Skin** (new client, API-only, no sheet): account 9557969390, soteriskin.com. 14 RSA / 4 PMax / 8 DG; renders OK locally. `sheet_id` is now optional in clients.json. Railway service still to be created (CLIENT=soteri).
+Hiccups are logged below.
+
+Hiccups / notes (2026-10-13)
+- Explorer access = ~2,880 operations/day and one search request = one operation. A full OIA pull is ~275, so
+  pulls are cached on disk for `GADS_CACHE_HOURS` (default 6) and the hourly rebuild just reuses the cache.
+- Google answered one query with HTTP 502; retries now cover 429/500/502/503/504 (a silent miss dropped one account's RSA assets before this).
+- Ad strength: API `UNKNOWN` = the sheet's "Incomplete" (PMax); `PENDING` still shows as Average (client request).
+- If the OAuth consent screen is External + Testing, Google expires refresh tokens after 7 days; the build then
+  falls back to the last cache / the sheet and logs the error.
+- The sheet is still read for the hand-made URLS preview-link tab. The 3 Ads Scripts can stay running until the API is trusted.
+- "Refresh" link now says "Refresh from Google Ads" for API clients and forces a fresh pull (>=10 min apart, `GADS_MIN_REFRESH_MINUTES`).
+- Railway: a shared variable only reaches a service after it is added in that service's Variables tab (first attempt fell back to the sheet).
+- Soteri also has 1 Shopping campaign, which the dashboard doesn't show (no Shopping ad type).
+- Google's own preview links (2026-10-13): generated by the API (v23 `generateShareablePreviews`, v24 changed the request
+  shape) for every PMax asset group on each pull; 14-day links, short URLs. They replace the hand-made, over-16 KB ones.
+  Demand Gen and RSA return UNSUPPORTED_AD_TYPE, so those keep the simulated previews. Incomplete asset groups get no link.
+- Quota incident (2026-10-13): Explorer's daily limit (~2,880 ops) ran out (HTTP 429, "Retry in ~61,000 seconds", resets ~midnight Pacific).
+  Causes: full OIA pulls (~275 requests) on every redeploy because the Railway disk (and cache) is wiped, plus local test pulls.
+  Services fell back to the sheet. Fixes: fail fast on a daily-quota 429 (no 30 s of retries), default cache window 12 h,
+  cache stored on the Railway volume when one is attached (`RAILWAY_VOLUME_MOUNT_PATH`) so redeploys reuse it.
+  Rule of thumb: avoid redeploy bursts; attach a small volume to each API service.
+
+## GD (2026-10-13)
+New API-only client `gd` (Railway `CLIENT=GD`): the 6 dental practices below, matched by account NAME under the main MCC
+(`account_names` in clients.json; near-misses and unmatched names are logged, never dropped silently):
+Gentle Dental, Great Hill Dental, Dynamic Dental, Great Lakes Family Dental, Southern Connecticut Dental Group, Dental Care Associates.
+- [ ] First build once the API quota resets (~07:00 UTC 2026-10-14); then confirm all 6 accounts matched.
+- [x] GD first build (2026-10-14): 6 accounts pulled. Great Lakes is named just "Great Lakes" in the MCC (added by ID 9925296449).
+      Ads live in 4 of them (Gentle 224 RSA/234 PMax/36 DG, Great Hill 163/30, Dynamic 17/1, Southern CT 8/2); Great Lakes and
+      Dental Care Associates have only paused campaigns, so they show no ads. All 267 PMax groups got Google preview links.
+- Fixes found by GD: preview-link requests are capped at 10 asset groups; a pull cut short by the quota (or empty) is now discarded
+  instead of cached, and an empty cache is ignored.
+
+## Per-account brand rule (2026-10-14) - must hold for every dashboard
+A preview shows ONLY its own account's business name and logo. Never the client/dashboard name, never another account's logo.
+- Business name: served BUSINESS_NAME asset -> that ad's own name -> the account's own name (account-level asset, else the name its
+  ads/campaigns use most, else the account name; per-client `business_name` override only for single-brand clients like Tealium).
+  Served `UNKNOWN` text parts are NOT business names (they are other assets, e.g. headline variants).
+- Logo: served logo -> ad/account-level logo -> that account's logo -> globe. The old "first logo of any account" fallback is gone.
+- Build prints one line per account and warns if a name/logo is missing or one logo is shared by several accounts.
+- Dashboard title comes from `name` in clients.json (GD = "42 North Dental").
+
+## Inspire Aesthetics (2026-10-15)
+API-only client `inspire` (Railway `CLIENT=inspire`), 8 accounts pinned by customer ID (+ `account_aliases` so Daniel I. Shapiro, M.D., P.C. shows as
+"Shapiro Plastic Surgery"): Inspire Aesthetics, Millard, Marietta, Shapiro, Southern Coastal, Plastic Surgery Center of Hampton Roads, EPSTEIN, Garramone.
+Built locally: 318+23 RSA, 123 PMax (all with Google preview links), 7 DG across all 8 accounts. Brand rule verified (own name/logo only, no shared logos).
+- Images: Google serves some PNGs with private metadata chunks that Pillow rejects (looked like a missing logo for Garramone). Build now retries,
+  strips non-pixel PNG chunks, and as a last resort keeps the original file.
+- EPSTEIN also runs a second business name ("Foundation Hair") on some campaigns; it is that account's own asset so it is shown as-is.
+
+## Burnout Brands (2026-10-15)
+API-only client `burnout` (Railway `CLIENT=burnout`), 4 accounts pinned by ID: Monster Transmission (2680354698), 1369614 B.C. LTD. (BD Engine Brake)
+(8577930930, CAD; shown as "BD Engine Brake" via account_aliases), D&J Precision Machine LLC (6438492741), Brian Tooley Racing (2016774320).
+Built locally: 30 RSA, 33 PMax (all with Google preview links), 6 DG; brand rule verified (own name/logo only, nothing shared); no image failures.
+- BD Engine Brake's own business-name asset is "BD Diesel"; Monster Transmission has "Monster Transmission(s)" variants. Shown as set in Google Ads.
+
+## Comments not visible for the client (2026-10-19)
+Gwen (Tealium) could not see the comment box while the team could. Server was fine (`/api/comments` answers). Root cause in the page: one failed
+`GET api/comments` set `cm.on=false` for the whole session and removed the box silently, so anything that blocks that single request
+(ad blocker / company filter / network hiccup) made the feature vanish with no message.
+- Page now tries two endpoint names (`api/notes`, `api/comments`; some filters block URLs containing "comment"), retries up to 3 times, and if it
+  still fails shows "Comments couldn't load on this connection (reason)" with a "Try again" button. A 404 from both (comments truly off) still hides quietly.
+- Off from the start on claude.ai / non-http pages (the box has never existed there).
+- Server also answers `/api/notes` (alias of `/api/comments`; same data, notifier path unchanged).
+- (2026-10-23) Gwen still saw no box after the 10-19 fix; a fresh Chrome on the live Railway page shows it fine ("Comments 1" + form). Most likely she
+  opens the old claude.ai artifact link, where comments cannot exist. Added: artifact/non-server pages now show "Comments are on the live dashboard: <live_url>"
+  (clients.json `live_url`, set for Tealium), and the server logs one line per page load / comment lookup (`[page]` / `[comments]` + browser UA) so a
+  report can be checked against what reached Railway.
+
+## One Railway service for every dashboard (2026-10-23)
+Today: one Railway service per client (7 boxes), same repo. Goal: ONE service, each dashboard at its own path
+(`<domain>/tealium`, `/oia`, `/mchale`, `/42north`, `/inspire`, `/burnout`, `/soteri`).
+Design
+- Opt-in with `MULTI=on` (default off, so the existing per-client services keep working untouched until switched).
+- Routing by first path segment = `slug` (clients.json, defaults to the key; GD uses `42north`). `/slug` redirects to `/slug/` so the page's
+  relative URLs (`assets/`, `api/...`) keep working. `/` and any unknown legacy path (`/api/comments/new`, `/assets/...`) go to the DEFAULT client
+  (`DEFAULT_CLIENT`, default tealium), so today's Tealium bookmark and the Apps Script comment notifier keep working.
+- Each client keeps its own state: comments (by client key), summary cache, status, password (`DASH_PASSWORD_<KEY>`, else `DASH_PASSWORD`).
+- Builds run one at a time as `python build.py <key>` subprocesses (no shared globals, no API-quota bursts). Output goes to `DIST_ROOT`
+  (the Railway volume when attached) so redeploys serve the last build immediately; a fresh dist is not rebuilt until it is `REBUILD_HOURS` old.
+- `/healthz` reports all sites; `/<slug>/healthz` one site. `/<slug>/api/rebuild` refreshes one client (GADS_FORCE for the API pull).
+Phases
+- [x] 1. build.py: `DIST_ROOT` env; gads_api: `GADS_FORCE` env. clients.json: `slug`.
+- [x] 2. main.py: Site class, routing, per-site state, subprocess builds, startup rule.
+- [x] 3. Local test (mchale + soteri): redirects, per-site pages/assets (cross-site asset = 404), comments isolation, per-site password, legacy root aliases + notifier, healthz, real subprocess builds, /api/rebuild. All passed.
+- [ ] 4. Push (per-client services unaffected), then switch ONE service (Ad_Dashboard, has the volume) to MULTI=on; verify every slug live.
+- [ ] 5. Delete the other six services; update the comment notifier URLs if used outside Tealium.
+
+## Tealium moved to the Google Ads API (2026-10-23)
+`tealium`: source=api, MCC 7835049660, accounts 6690510760 (ANZ/ASIA), 9413684678 (EMEA), 2281287878 (NAM); `business_name` "Tealium" (one brand) kept.
+Compared with the sheet build: identical 136 ad ids (comments stay attached), identical copy/URLs/paths/images/logos/videos/extensions; only ad strength differs
+(live from Google; 17 ads that had none now have one). 68 hand-made preview links kept from the URLS tab, 3 PMax links now generated. `live_url` points at
+the hub (https://tealiumads.up.railway.app/tealium/). The sheet is still read for the URLS tab only. Label now reads "Refresh from Google Ads".

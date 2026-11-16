@@ -1,0 +1,792 @@
+<meta charset="utf-8">
+<title>__CLIENT__ Ad Previews</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F2F3F6;--surface:#FFFFFF;--sunk:#E9EBF0;--ink:#161B26;--muted:#5A6273;--faint:#8A91A0;--line:#DCE0E7;
+  --accent:#0E6B5C;--accent-soft:#DDEFEB;
+  --s-excellent:#137333;--s-good:#2F8F46;--s-average:#B45F06;--s-poor:#C5221F;--s-none:#8A91A0;
+  --s-excellent-bg:#E3F2E7;--s-good-bg:#E8F4EA;--s-average-bg:#FCEFDF;--s-poor-bg:#FBE7E6;--s-none-bg:#ECEEF2;
+  --sim:#7A4FB5;--sim-bg:#F1EAFA;
+  --k-rsa:#1B4FA8;--k-rsa-bg:#E3ECFB;--k-pmax:#9A4A06;--k-pmax-bg:#FDEBD8;
+  --serp-bg:#FFFFFF;--serp-title:#1A0DAB;--serp-text:#474747;--serp-ink:#202124;--serp-url:#4D5156;--serp-line:#DADCE0;--serp-chip:#F1F3F4;
+  --frame:#E4E7EC;
+  --on-accent:#FFFFFF;--q-poor:#C5221F;--q-average:#E8A33A;--q-good:#2F8F46;--q-excellent:#1F78B4;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --ui:"Figtree","Segoe UI",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --google:Arial,"Helvetica Neue",Helvetica,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --ground:#0E1117;--surface:#161A22;--sunk:#1D222C;--ink:#E7EAF0;--muted:#A0A8B7;--faint:#6F7788;--line:#29303C;
+  --accent:#45C2AC;--accent-soft:#133A34;
+  --s-excellent:#6DD58C;--s-good:#81C995;--s-average:#F2B061;--s-poor:#F28B82;--s-none:#8D95A4;
+  --s-excellent-bg:#15321F;--s-good-bg:#18301F;--s-average-bg:#3A2A14;--s-poor-bg:#3C1C1A;--s-none-bg:#232833;
+  --sim:#C2A2F0;--sim-bg:#2A2138;
+  --k-rsa:#9CC0FF;--k-rsa-bg:#1B2B45;--k-pmax:#F5B97A;--k-pmax-bg:#3A2614;
+  --serp-bg:#1F1F1F;--serp-title:#99C3FF;--serp-text:#BFBFBF;--serp-ink:#E8EAED;--serp-url:#BDC1C6;--serp-line:#3C4043;--serp-chip:#303134;
+  --frame:#232833;
+  --on-accent:#06201B;--q-poor:#CF3F5C;--q-average:#C58400;--q-good:#127A42;--q-excellent:#4A7FE0;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#0E1117;--surface:#161A22;--sunk:#1D222C;--ink:#E7EAF0;--muted:#A0A8B7;--faint:#6F7788;--line:#29303C;
+  --accent:#45C2AC;--accent-soft:#133A34;
+  --s-excellent:#6DD58C;--s-good:#81C995;--s-average:#F2B061;--s-poor:#F28B82;--s-none:#8D95A4;
+  --s-excellent-bg:#15321F;--s-good-bg:#18301F;--s-average-bg:#3A2A14;--s-poor-bg:#3C1C1A;--s-none-bg:#232833;
+  --sim:#C2A2F0;--sim-bg:#2A2138;
+  --k-rsa:#9CC0FF;--k-rsa-bg:#1B2B45;--k-pmax:#F5B97A;--k-pmax-bg:#3A2614;
+  --serp-bg:#1F1F1F;--serp-title:#99C3FF;--serp-text:#BFBFBF;--serp-ink:#E8EAED;--serp-url:#BDC1C6;--serp-line:#3C4043;--serp-chip:#303134;
+  --frame:#232833;
+  --on-accent:#06201B;--q-poor:#CF3F5C;--q-average:#C58400;--q-good:#127A42;--q-excellent:#4A7FE0;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font:14px/1.5 var(--ui);padding-inline:16px;padding-block:20px 48px}
+.wrap{max-width:1360px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* header */
+.top h1{font:700 26px/1.1 var(--display);letter-spacing:-.01em;margin:0 0 6px;text-wrap:balance}
+.top h1 span{color:var(--accent)}
+.fresh{color:var(--muted);font-size:12.5px;display:flex;flex-wrap:wrap;gap:4px 16px}
+.fresh b{color:var(--ink);font-weight:600}
+.fresh .refresh{color:var(--accent,var(--ink));font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.ctitle{font-size:13px;font-weight:600;margin:0 0 2px}
+.csub{font-size:12px;color:var(--muted);margin:0 0 12px}
+/* horizontal bar chart */
+.hb{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(50px,1fr) auto;gap:8px 10px;align-items:center;font-size:12px;line-height:1.3}
+.hb .lab{color:var(--ink);overflow:hidden;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.hb .lab.btn{border:0;background:none;padding:0;text-align:left;cursor:pointer}
+.hb .lab.btn:hover{color:var(--accent);text-decoration:underline}
+.hb .trk{height:14px;display:flex;align-items:center}
+.hb .trk i{display:block;height:14px;background:var(--accent);border-radius:0 4px 4px 0;min-width:2px}
+.hb .val{font:500 12px var(--mono);color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+/* tooltip */
+#tip{position:fixed;z-index:50;pointer-events:none;background:var(--ink);color:var(--surface);font-size:12px;line-height:1.4;padding:7px 10px;border-radius:6px;max-width:320px;box-shadow:0 4px 14px rgb(0 0 0 / .25)}
+#tip b{font-family:var(--mono)}
+[data-tip]{cursor:default}
+
+/* toolbar */
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:inline-flex;background:var(--sunk);border-radius:8px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;padding:5px 11px;border-radius:6px;font-size:13px;color:var(--muted);font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgb(0 0 0 / .12)}
+.field{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13px;min-width:0}
+select.field{max-width:280px}
+input.field{flex:1 1 200px;max-width:320px}
+.check{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+
+/* main grid */
+.main{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:960px){.main{grid-template-columns:minmax(0,1fr)}}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:10px;max-height:calc(100vh - 40px);overflow:auto;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+@media (max-width:960px){.list{position:static;max-height:46vh}}
+.grp{padding:9px 14px 7px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:600;position:sticky;top:0;z-index:1;background:var(--surface);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}
+.grp span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:transparent;padding:10px 14px}
+.item:hover{background:var(--sunk)}
+.item[aria-current="true"]{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.item .t{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .s{grid-column:1;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .r{grid-row:1/3;grid-column:2;display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:12px}
+.empty{padding:28px 16px;color:var(--muted);text-align:center}
+
+/* chips & pills */
+.kind{font:600 10.5px/1 var(--ui);letter-spacing:.05em;text-transform:uppercase;padding:4px 6px;border-radius:4px}
+.kind.RSA{background:var(--k-rsa-bg);color:var(--k-rsa)}.kind.PMAX{background:var(--k-pmax-bg);color:var(--k-pmax)}.kind.DG{background:var(--sim-bg);color:var(--sim)}
+.str{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.str::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.str.sm{font-size:11px;padding:0 6px}
+.str.excellent{color:var(--s-excellent);background:var(--s-excellent-bg)}.str.good{color:var(--s-good);background:var(--s-good-bg)}
+.str.average{color:var(--s-average);background:var(--s-average-bg)}.str.poor{color:var(--s-poor);background:var(--s-poor-bg)}
+.str.none{color:var(--s-none);background:var(--s-none-bg)}
+
+/* detail */
+.detail{display:flex;flex-direction:column;gap:16px;min-width:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px}
+.crumb{font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px}
+.crumb span+span::before{content:"›";margin-right:4px;color:var(--faint)}
+.detail h2{font:600 21px/1.25 var(--display);margin:6px 0 10px;text-wrap:balance}
+.meta{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:13px;color:var(--muted)}
+.meta b{color:var(--ink)}
+.meta a{color:var(--accent);font-weight:600;text-decoration:none}
+.note{margin-top:12px;font-size:13px;padding:9px 12px;border-radius:8px;background:var(--sim-bg);color:var(--sim)}
+.note.real{background:var(--accent-soft);color:var(--accent)}
+h3{font:600 11.5px/1.2 var(--ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.phead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.phead h3{margin:0}
+.pgrid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+@media (max-width:1180px){.pgrid{grid-template-columns:minmax(0,1fr)}}
+.stage{background:var(--frame);border-radius:10px;padding:22px;display:flex;justify-content:center;align-items:flex-start;min-height:220px;overflow:hidden}
+@media (max-width:520px){.stage{padding:12px}}
+.stepper{display:flex;align-items:center;gap:10px;justify-content:center;margin-top:10px;font-size:12.5px;color:var(--muted);text-align:center}
+.stepper button{border:1px solid var(--line);background:var(--surface);border-radius:6px;width:30px;height:28px;line-height:1;flex:none}
+.combos{display:flex;flex-direction:column;gap:6px;max-height:520px;overflow:auto;padding:2px}
+.combo{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:5px 8px;align-items:center;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px}
+.combo:hover{border-color:var(--faint)}
+.combo[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.combo .rk{font:500 12px var(--mono);color:var(--faint)}
+.combo .tx{font-size:12.5px;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.combo .tx .d{color:var(--muted)}
+.combo .im{font-size:12px}
+.combo .bar{grid-column:2/4;height:4px;background:var(--sunk);border-radius:2px;overflow:hidden;display:block}
+.combo .bar i{display:block;height:100%;background:var(--accent);border-radius:2px}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12.5px;padding:3px 10px;border-radius:99px;background:var(--sunk)}
+.gallery{display:flex;flex-wrap:wrap;gap:12px}
+.gallery figure{margin:0;display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--faint)}
+.gallery img{height:96px;width:auto;max-width:170px;object-fit:cover;border-radius:6px;border:1px solid var(--line);background:var(--sunk);display:block}
+
+/* ---------- Google previews ---------- */
+.g{font-family:var(--google);color:var(--serp-ink);background:var(--serp-bg);border-radius:10px;box-shadow:0 1px 3px rgb(0 0 0 / .16);width:100%;max-width:640px;overflow:hidden}
+.g.mobile{max-width:380px}
+.serp{padding:18px 20px}
+.g.mobile .serp{padding:14px 16px}
+.serp .sp{font-weight:700;font-size:14px;margin-bottom:10px}
+.serp .row{display:flex;gap:14px}
+.serp .body{flex:1;min-width:0}
+.site{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.fav{width:28px;height:28px;border-radius:50%;border:1px solid var(--serp-line);display:grid;place-items:center;overflow:hidden;background:#fff;color:#202124;font-size:13px;font-weight:700;flex:none}
+.fav img{width:100%;height:100%;object-fit:contain}
+.site .nm{font-size:14px;line-height:20px}
+.site .u{font-size:12px;line-height:18px;color:var(--serp-url);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.serp .hl{display:block;color:var(--serp-title);font-size:20px;line-height:26px;margin:2px 0 3px}
+.g.mobile .serp .hl{font-size:18px;line-height:24px}
+.serp .ds,.serp .co{font-size:14px;line-height:22px;color:var(--serp-text)}
+.serp .thumb{width:92px;height:92px;border-radius:8px;object-fit:cover;flex:none}
+.serp .thumb.wide{width:100%;height:auto;aspect-ratio:1.91/1;margin-top:10px}
+.sl2{display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;margin-top:12px}
+.sl2 .t{color:var(--serp-title);font-size:15px}
+.sl2 .d{font-size:13px;color:var(--serp-text);line-height:19px}
+.sl1{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:6px;color:var(--serp-title);font-size:14px}
+.slm{display:flex;gap:8px;margin-top:12px;overflow-x:auto;padding-bottom:2px}
+.slm span{flex:none;border:1px solid var(--serp-line);border-radius:18px;padding:7px 14px;color:var(--serp-title);font-size:14px;white-space:nowrap}
+.img{display:block;width:100%;max-width:100%;aspect-ratio:1.91/1;object-fit:cover;background:var(--serp-chip)}
+.img.sq{aspect-ratio:1/1}
+.ph{display:grid;place-items:center;background:linear-gradient(135deg,var(--serp-chip),var(--serp-line));color:var(--serp-url);font-size:12px;text-align:center;padding:12px}
+.disp{max-width:340px}
+.disc{max-width:400px}
+.card-in{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px}
+.disp .hd{font-size:18px;line-height:23px;font-weight:700}
+.disc .hd{font-size:17px;line-height:23px}
+.dd{font-size:13px;line-height:18px;color:var(--serp-text)}
+.byline{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--serp-url)}
+.byline b{color:var(--serp-ink)}
+.byline .fav{width:24px;height:24px;font-size:11px}
+.cta{align-self:flex-start;background:#1A73E8;color:#fff;border-radius:18px;padding:7px 16px;font-size:13px;font-weight:700;display:inline-block}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:4px}
+.yt{max-width:420px;padding:10px}
+.yt .vbox{position:relative;display:block;border-radius:10px;overflow:hidden}
+.yt .play{position:absolute;inset:0;display:grid;place-items:center}
+.yt .play span{width:62px;height:44px;border-radius:12px;background:rgb(0 0 0 / .72);display:grid;place-items:center}
+.yt .play span::after{content:"";border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent;margin-left:4px}
+.yt .row{display:flex;gap:12px;padding:12px 2px 4px}
+.yt .hd{font-size:15px;line-height:21px;font-weight:700}
+.yt .sub{font-size:12.5px;color:var(--serp-url);margin-top:2px}
+.yt .cta{margin-top:10px}
+.gm{max-width:560px;display:flex;gap:12px;align-items:flex-start;padding:14px 16px}
+.gm .fav{width:36px;height:36px}
+.gm .who{font-size:13px;display:flex;gap:6px;align-items:center}
+.adb{font-size:11px;font-weight:700;border:1px solid currentColor;border-radius:3px;padding:0 3px;line-height:14px}
+.gm .hd{font-weight:700;font-size:14px;margin-top:2px}
+.gm .dd{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (prefers-reduced-motion:no-preference){.stage .g{animation:fade .18s ease-out}}
+@keyframes fade{from{opacity:.5;transform:translateY(3px)}to{opacity:1;transform:none}}
+/* account summary */
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:12px 20px}
+.sumbtn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:var(--on-accent);border:0;border-radius:8px;padding:9px 16px;font-weight:600;font-size:13.5px}
+.sumbtn:hover{filter:brightness(1.08)}
+.sumbtn svg{width:16px;height:16px}
+dialog.sum{border:0;padding:0;border-radius:12px;width:min(760px,calc(100vw - 32px));max-height:calc(100vh - 48px);background:var(--surface);color:var(--ink);box-shadow:0 18px 60px rgb(0 0 0 / .35)}
+dialog.sum::backdrop{background:rgb(8 10 14 / .55)}
+.sum .shd{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:18px 20px 14px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:1}
+.sum .shd h2{font:600 19px/1.2 var(--display);margin:0}
+.sum .shd .sub{font-size:12px;color:var(--muted);margin-top:3px}
+.sum .back{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 12px 6px 9px;font-size:13px;font-weight:600}
+.sum .back:hover{border-color:var(--faint)}
+.sum .back svg{width:15px;height:15px}
+.sum .sbody{padding:18px 20px 22px;display:flex;flex-direction:column;gap:18px}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+@media (max-width:560px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);padding:12px 14px}
+.kpi .l{font-size:12px;color:var(--muted)}
+.kpi .v{font:600 22px/1.2 var(--ui);letter-spacing:-.01em;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:11.5px;color:var(--faint);margin-top:1px}
+.scharts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:18px}
+.ai{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--ground)}
+.ai h3{margin-bottom:8px}
+.ai p{margin:0 0 8px;line-height:1.55}
+.ai ul{margin:0 0 8px;padding-left:18px;display:flex;flex-direction:column;gap:4px;line-height:1.5}
+.ai .foot{font-size:11.5px;color:var(--faint);margin-top:8px}
+.ai .err{color:var(--muted)}
+.pulse{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:8px;vertical-align:middle}
+@media (prefers-reduced-motion:no-preference){.pulse{animation:pulse 1s ease-in-out infinite alternate}}
+@keyframes pulse{from{opacity:.25}to{opacity:1}}
+.warnbox{font-size:13px;padding:9px 12px;border-radius:8px;background:var(--s-average-bg);color:var(--s-average)}
+/* live asset lists */
+.phead .src{font-size:12px;color:var(--faint)}
+.agrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:22px 28px}
+.agrid.media{margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}
+.aset.wide{grid-column:1/-1}
+.acol{display:flex;flex-direction:column;gap:22px;min-width:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.cbox{background:var(--sunk);border-radius:10px;padding:14px 16px}
+.cform{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.cform input,.cform textarea{font:13.5px/1.45 var(--ui);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;box-sizing:border-box}
+.cform textarea{resize:vertical;min-height:72px}
+.cform input:focus-visible,.cform textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.crow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.cbtn{font:600 13px var(--ui);background:var(--accent);color:var(--on-accent);border:0;border-radius:8px;padding:7px 14px;cursor:pointer}
+.cbtn:disabled{opacity:.6;cursor:default}
+.cstat{font-size:12.5px;color:var(--muted)}
+.clist{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column}
+.clist li{padding:10px 0;border-top:1px solid var(--line)}
+.chead{display:flex;justify-content:space-between;gap:10px;font-size:12.5px}
+.chead span{color:var(--faint);font-family:var(--mono);font-size:11.5px;white-space:nowrap}
+.clist p{margin:4px 0 0;font-size:13.5px;white-space:pre-wrap;overflow-wrap:anywhere}
+.cnone{margin:12px 0 0;font-size:13px;color:var(--faint)}
+.aset h3 .n{font-family:var(--mono);color:var(--faint);letter-spacing:0;margin-left:4px}
+.alist,.slist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.alist li{display:flex;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.alist .at{flex:1;min-width:0}
+.alist .cc{font:500 11.5px var(--mono);color:var(--faint);white-space:nowrap}
+.alist .cc.hi{color:var(--s-average)}
+.pin{font-size:11px;font-weight:600;color:var(--k-rsa);background:var(--k-rsa-bg);border-radius:99px;padding:1px 8px;white-space:nowrap}
+.slist li{display:flex;flex-direction:column;padding:7px 0;border-bottom:1px solid var(--line)}
+.slist .st{font-size:13.5px;font-weight:600}
+.slist .sd{font-size:12.5px;color:var(--muted)}
+.glinks{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:12px}
+.gl-lab{font-size:12px;font-weight:600;color:var(--muted)}
+.gl-set{display:inline-flex;align-items:center;gap:6px}
+.gl-n{font:500 11.5px var(--mono);color:var(--faint)}
+.glink{font-size:12.5px;font-weight:600;color:var(--accent);text-decoration:none;border:1px solid var(--accent);border-radius:7px;padding:3px 9px}
+.glink:hover{background:var(--accent-soft)}
+.exp{font-size:11.5px;font-weight:600;border-radius:99px;padding:1px 8px}
+.exp.bad{color:var(--s-poor);background:var(--s-poor-bg)}.exp.warn{color:var(--s-average);background:var(--s-average-bg)}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1><span id="client">__CLIENT__</span> Ad Previews</h1>
+      <div class="fresh" id="fresh"></div>
+    </div>
+    <button type="button" class="sumbtn" id="sumBtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 13.5h12M4 11V7M8 11V3M12 11V5.5"/></svg>Account summary</button>
+  </header>
+  <nav class="bar" aria-label="Filters">
+    <div class="seg" id="f-account" role="group" aria-label="Account"></div>
+    <div class="seg" id="f-kind" role="group" aria-label="Ad type"></div>
+    <select class="field" id="f-campaign" aria-label="Campaign"></select>
+    <input class="field" id="f-q" type="search" placeholder="Search headlines, descriptions, ad groups" aria-label="Search">
+    <label class="check"><input type="checkbox" id="f-unserved" checked> Include not-served ads</label>
+  </nav>
+  <div class="main">
+    <aside class="list" id="list" aria-label="Ads"></aside>
+    <section class="detail" id="detail" aria-live="polite"></section>
+  </div>
+</div>
+
+<div id="tip" role="tooltip" hidden></div>
+<dialog class="sum" id="sumDlg" aria-label="Account summary"></dialog>
+<script>
+const DATA=/*__DATA__*/null;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=n=>n==null?"—":Number(n).toLocaleString("en-US");
+const KIND={RSA:"Search",PMAX:"PMax",DG:"Demand Gen"};
+const LIMIT={headline:30,description:90,long:90,sitelink:25,callout:25};
+const store={get(k,d){try{const v=localStorage.getItem("adp."+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("adp."+k,JSON.stringify(v))}catch(e){}}};
+const state={account:"All",kind:"All",campaign:"All",q:"",unserved:true,sel:null,combo:0,
+  device:store.get("device","desktop"),pcat:"TEXT",pfmt:"display",dgfmt:"discover"};
+
+/* ---------- data helpers ---------- */
+const ads=DATA.ads;
+ads.forEach(a=>{
+  a.title=a.adGroup||(a.headlines||[])[0]||a.campaign;
+  a.text=[a.adGroup,a.campaign,...(a.headlines||[]),...(a.descriptions||[]),...(a.longHeadlines||[])].join(" ").toLowerCase();
+});
+const strengthKey=s=>(s||"none").toLowerCase();
+const isH=f=>/^HEADLINE(_\d)?$/.test(f), isD=f=>/^DESCRIPTION(_\d)?$/.test(f);
+const heads=P=>P.filter(p=>isH(p.f)&&p.x).map(p=>p.x);
+const descs=P=>P.filter(p=>isD(p.f)&&p.x).map(p=>p.x);
+const textOf=(P,re)=>{const p=P.find(p=>re.test(p.f)&&p.x);return p?p.x:""};
+const prettyCta=c=>c?c.toLowerCase().replace(/_/g," ").replace(/^./,m=>m.toUpperCase()):"Learn more";
+function hostOf(u){try{return new URL(u).hostname}catch(e){return DATA.domain}}
+function displayUrl(ad){const h=hostOf(ad.finalUrl).replace(/^(?!www\.)/,"www.");return "https://"+h+[ad.path1,ad.path2].filter(Boolean).map(p=>" › "+p).join("")}
+
+/* Previews for ads Google doesn't report combinations for (Demand Gen, RSAs with no impressions),
+   assembled only from the ad's own assets: pinned assets stay in their slot, extensions/images are the real ones. */
+function pinnedFirst(list,pins,prefix,slots,i){
+  const out=[],used=new Set();
+  for(let s=1;s<=slots;s++){
+    const pinned=list.filter(t=>pins[t]===prefix+s);
+    const pool=pinned.length?pinned:list.filter(t=>!pins[t]&&!used.has(t));
+    if(!pool.length)continue;
+    const pick=pool[(i+s-1)%pool.length];
+    if(!used.has(pick)){used.add(pick);out.push(pick)}
+  }
+  return out;
+}
+function simCombos(ad){
+  const H=ad.headlines||[],D=ad.descriptions||[],L=ad.longHeadlines||[],out=[];
+  if(!H.length)return out;
+  const x=ad.ext||{},pins=ad.pins||{},imgs=ad.images||[],vids=ad.videoThumbs||[];
+  for(let i=0;i<Math.min(8,H.length);i++){
+    const parts=[];
+    if(ad.kind==="DG"){
+      parts.push({f:"HEADLINE_1",t:"TEXT",x:H[i]});
+      if(L.length)parts.push({f:"LONG_HEADLINE",t:"TEXT",x:L[i%L.length]});
+      if(D.length)parts.push({f:"DESCRIPTION_1",t:"TEXT",x:D[i%D.length]});
+      if(imgs.length){const im=imgs[i%imgs.length];parts.push({f:im.f,t:"IMAGE",img:im.img})}
+      if(vids.length){const v=vids[i%vids.length];parts.push({f:"YOU_TUBE_VIDEO",t:"YOUTUBE_VIDEO",vid:v.vid,img:v.img})}
+      if(ad.cta)parts.push({f:"CALL_TO_ACTION",t:"TEXT",x:ad.cta});
+    }else{
+      pinnedFirst(H,pins,"H",3,i).forEach((h,j)=>parts.push({f:"HEADLINE_"+(j+1),t:"TEXT",x:h}));
+      pinnedFirst(D,pins,"D",2,i).forEach((d,j)=>parts.push({f:"DESCRIPTION_"+(j+1),t:"TEXT",x:d}));
+      (x.sitelinks||[]).slice(0,4).forEach(s=>parts.push({f:"SITELINK",t:"SITELINK",x:s.x,l:s.l}));
+      (x.callouts||[]).slice(0,4).forEach(c=>parts.push({f:"CALLOUT",t:"CALLOUT",x:c}));
+      if((x.snippets||[])[0])parts.push({f:"STRUCTURED_SNIPPET",t:"STRUCTURED_SNIPPET",x:x.snippets[0]});
+      if((x.images||[]).length)parts.push({f:"AD_IMAGE",t:"IMAGE",img:x.images[i%x.images.length]});
+    }
+    out.push({rank:i+1,sim:true,parts});
+  }
+  return out;
+}
+function allCombos(ad){if(!ad._c)ad._c=ad.combos.length?ad.combos:simCombos(ad);return ad._c}
+function combosOf(ad){const c=allCombos(ad);return ad.kind==="PMAX"?c.filter(x=>x.cat===state.pcat):c}
+
+
+/* ---------- Google preview renderers ---------- */
+function bizName(ad,P){const b=P.find(p=>p.f==="BUSINESS_NAME"&&p.t==="TEXT"&&p.x);return b?b.x:((ad.ext&&ad.ext.business)||ad.business||(DATA.businesses||{})[ad.account]||ad.account||"")}  /* never the client name: one client can hold many accounts */
+function logoFor(ad,P){
+  const l=(P||[]).find(p=>(p.f==="BUSINESS_LOGO"||p.f==="LOGO")&&p.img);
+  return (l&&l.img)||(ad.ext&&ad.ext.logo)||(ad.logos||[])[0]||(DATA.logos||{})[ad.account]||"";  /* only this ad's own account: never borrow another account's logo */
+}
+const GLOBE=`<svg viewBox="0 0 24 24" width="60%" height="60%" fill="none" stroke="#5f6368" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9M12 3C9.5 5.6 8.2 8.6 8.2 12s1.3 6.4 3.8 9"/></svg>`;
+function fav(ad,P){const src=logoFor(ad,P);return `<span class="fav">${src?`<img src="${esc(src)}" alt="">`:GLOBE}</span>`}
+function ctaOf(ad,P){const c=P.find(p=>p.f==="CALL_TO_ACTION"&&p.x);return prettyCta(c?c.x:ad.cta)}
+function pickImg(P,prefer){for(const f of prefer){const p=P.find(p=>p.f===f&&p.img);if(p)return p}return P.find(p=>p.img&&!p.vid&&!/LOGO/.test(p.f))}
+function imgTag(p,cls,label){return p?`<img class="${cls}" src="${esc(p.img)}" alt="">`:`<div class="${cls} ph">${esc(label)}</div>`}
+
+function serp(ad,combo,device){
+  const P=combo.parts,mobile=device==="mobile";
+  const H=heads(P),D=descs(P);
+  const prefix=textOf(P,/^DESCRIPTION_PREFIX$/);
+  const callouts=P.filter(p=>p.f==="CALLOUT"&&p.x).map(p=>p.x);
+  const snip=textOf(P,/^STRUCTURED_SNIPPET$/);
+  const sls=[...P.filter(p=>p.f==="SITELINK"&&p.x),...P.filter(p=>/^HEADLINE_AS_SITELINK/.test(p.f)&&p.x).map(p=>({x:p.x}))];
+  const img=P.find(p=>p.f==="AD_IMAGE"&&p.img);
+  let sl="";
+  if(sls.length){
+    if(mobile)sl=`<div class="slm">${sls.slice(0,6).map(s=>`<span>${esc(s.x)}</span>`).join("")}</div>`;
+    else if(sls.some(s=>s.l&&s.l.length))sl=`<div class="sl2">${sls.slice(0,4).map(s=>`<div><div class="t">${esc(s.x)}</div>${(s.l||[]).map(l=>`<div class="d">${esc(l)}</div>`).join("")}</div>`).join("")}</div>`;
+    else sl=`<div class="sl1">${sls.slice(0,4).map(s=>`<span>${esc(s.x)}</span>`).join("")}</div>`;
+  }
+  return `<div class="g${mobile?" mobile":""}"><div class="serp">
+    <div class="sp">Sponsored</div>
+    <div class="row"><div class="body">
+      <div class="site">${fav(ad,P)}<div style="min-width:0"><div class="nm">${esc(bizName(ad,P))}</div><div class="u">${esc(displayUrl(ad))}</div></div></div>
+      <div class="hl">${esc(H.join(" | ")||"(no headline served)")}</div>
+      <div class="ds">${prefix?esc(prefix)+" · ":""}${esc(D.join(" "))}</div>
+      ${callouts.length?`<div class="co">${callouts.slice(0,4).map(esc).join(" · ")}</div>`:""}
+      ${snip?`<div class="co">${esc(snip)}</div>`:""}
+    </div>${img&&!mobile?`<img class="thumb" src="${esc(img.img)}" alt="">`:""}</div>
+    ${img&&mobile?`<img class="thumb wide" src="${esc(img.img)}" alt="">`:""}
+    ${sl}
+  </div></div>`;
+}
+function displayCard(ad,combo){
+  const P=combo.parts,im=pickImg(P,["MARKETING_IMAGE","AD_IMAGE","SQUARE_MARKETING_IMAGE","PORTRAIT_MARKETING_IMAGE"]);
+  const sq=im&&/SQUARE|PORTRAIT/.test(im.f);
+  return `<div class="g disp">${imgTag(im,"img"+(sq?" sq":""),"No image in this combination")}<div class="card-in">
+    <div class="hd">${esc(textOf(P,/^LONG_HEADLINE/)||heads(P)[0]||"")}</div>
+    <div class="dd">${esc(descs(P)[0]||"")}</div>
+    <div class="foot"><div class="byline">${fav(ad,P)}<span>${esc(bizName(ad,P))}</span></div><span class="cta">${esc(ctaOf(ad,P))}</span></div>
+  </div></div>`;
+}
+function discoverCard(ad,combo){
+  const P=combo.parts,im=pickImg(P,["MARKETING_IMAGE","AD_IMAGE","PORTRAIT_MARKETING_IMAGE","SQUARE_MARKETING_IMAGE"]);
+  return `<div class="g disc">${imgTag(im,"img",combo.sim?"No image on this ad":"No image in this combination")}<div class="card-in">
+    <div class="byline">${fav(ad,P)}<span><b>${esc(bizName(ad,P))}</b> · Sponsored</span></div>
+    <div class="hd">${esc(textOf(P,/^LONG_HEADLINE/)||heads(P)[0]||"")}</div>
+    <div class="dd">${esc(descs(P)[0]||"")}</div>
+    <span class="cta">${esc(ctaOf(ad,P))}</span>
+  </div></div>`;
+}
+function youtubeCard(ad,combo){
+  const P=combo.parts,v=P.find(p=>p.vid)||{};
+  const thumb=v.img?`<img class="img" src="${esc(v.img)}" alt="">`:`<div class="img ph">${combo.sim?"No video on this ad":"No video in this combination"}</div>`;
+  return `<div class="g yt">
+    ${v.vid?`<a class="vbox" href="https://www.youtube.com/watch?v=${esc(v.vid)}" target="_blank" rel="noopener" title="Open this video on YouTube">${thumb}<span class="play"><span></span></span></a>`:`<div class="vbox">${thumb}</div>`}
+    <div class="row">${fav(ad,P)}<div style="min-width:0">
+      <div class="hd">${esc(textOf(P,/^LONG_HEADLINE/)||heads(P)[0]||"")}</div>
+      <div class="sub"><span class="adb">Ad</span> · ${esc(bizName(ad,P))}</div>
+      <div class="dd" style="margin-top:4px">${esc(descs(P)[0]||"")}</div>
+      <span class="cta">${esc(ctaOf(ad,P))}</span>
+    </div></div></div>`;
+}
+function gmailRow(ad,combo){
+  const P=combo.parts;
+  return `<div class="g gm">${fav(ad,P)}<div style="min-width:0">
+    <div class="who"><span class="adb">Ad</span><b>${esc(bizName(ad,P))}</b></div>
+    <div class="hd">${esc(heads(P)[0]||"")}</div>
+    <div class="dd">${esc(descs(P)[0]||"")}</div></div></div>`;
+}
+function renderPreview(ad,combo){
+  if(!combo)return `<div class="empty">No combinations in this format.</div>`;
+  if(ad.kind==="RSA")return serp(ad,combo,state.device);
+  if(ad.kind==="PMAX"){
+    if(state.pcat==="TEXT")return serp(ad,combo,state.device);
+    if(state.pcat==="VIDEO")return youtubeCard(ad,combo);
+    return state.pfmt==="discover"?discoverCard(ad,combo):displayCard(ad,combo);
+  }
+  return({discover:discoverCard,gmail:gmailRow,youtube:youtubeCard})[state.dgfmt](ad,combo);
+}
+
+/* ---------- filters & list ---------- */
+function segBtns(el,opts,key){
+  el.innerHTML=opts.map(([v,l])=>`<button type="button" data-v="${esc(v)}" aria-pressed="${state[key]===v}">${esc(l)}</button>`).join("");
+}
+$("#f-account").onclick=e=>{const b=e.target.closest("button");if(b){state.account=b.dataset.v;state.campaign="All";render()}};
+$("#f-kind").onclick=e=>{const b=e.target.closest("button");if(b){state.kind=b.dataset.v;state.campaign="All";render()}};
+function filtered(){
+  const q=state.q.trim().toLowerCase();
+  return ads.filter(a=>(state.account==="All"||a.account===state.account)&&(state.kind==="All"||a.kind===state.kind)
+    &&(state.campaign==="All"||a.campaign===state.campaign)&&(state.unserved||a.served)&&(!q||a.text.includes(q)));
+}
+function renderList(list){
+  const el=$("#list");
+  if(!list.length){el.innerHTML=`<div class="empty">No ads match these filters.</div>`;return}
+  const groups=new Map();
+  list.forEach(a=>{if(!groups.has(a.campaign))groups.set(a.campaign,[]);groups.get(a.campaign).push(a)});
+  el.innerHTML=[...groups].map(([camp,items])=>{
+    items.sort((a,b)=>(b.served-a.served)||((b.impressions||0)-(a.impressions||0)));
+    return `<div class="grp"><span>${esc(camp)}</span><span>${esc(items[0].account)}</span></div>`+items.map(a=>{
+      const sub=a.adGroup?(a.headlines||[])[0]||"":(a.headlines||[])[1]||"";
+      const right=a.impressions?`<span class="mono">${fmt(a.impressions)}</span>`:a.strength?`<span class="str sm ${strengthKey(a.strength)}">${esc(a.strength)}</span>`:"";
+      return `<button type="button" class="item" data-id="${esc(a.id)}" aria-current="${a.id===state.sel}">
+        <span class="t">${esc(a.title)}</span>
+        <span class="s">${a.served?"":"Not served · "}${esc(sub)}</span>
+        <span class="r"><span class="kind ${a.kind}">${KIND[a.kind]}</span>${right}</span></button>`;
+    }).join("");
+  }).join("");
+}
+$("#list").addEventListener("click",e=>{
+  const b=e.target.closest(".item");if(!b)return;select(b.dataset.id);
+  if(matchMedia("(max-width:960px)").matches)$("#detail").scrollIntoView({behavior:"smooth",block:"start"});
+});
+function select(id){state.sel=id;state.combo=0;state.pcat="TEXT";try{history.replaceState(null,"","#ad-"+id)}catch(e){}render()}
+
+/* ---------- tooltip (shared by every chart) ---------- */
+const tip=$("#tip");
+document.addEventListener("pointerover",e=>{const el=e.target.closest("[data-tip]");if(!el){tip.hidden=true;return}tip.textContent=el.dataset.tip;tip.hidden=false});
+document.addEventListener("pointermove",e=>{if(tip.hidden)return;const w=tip.offsetWidth,h=tip.offsetHeight;let x=e.clientX+14,y=e.clientY+14;if(x+w>innerWidth-8)x=e.clientX-w-14;if(y+h>innerHeight-8)y=e.clientY-h-14;tip.style.left=x+"px";tip.style.top=y+"px"});
+document.addEventListener("pointerleave",()=>{tip.hidden=true});
+const pct=(a,b)=>b?Math.round(a/b*100):0;
+
+/* ---------- detail ---------- */
+function servedTexts(ad,pred){const s=new Set();ad.combos.forEach(c=>c.parts.forEach(p=>{if(pred(p.f)&&p.x)s.add(p.x)}));return[...s]}
+function servedSitelinks(ad){const m=new Map();ad.combos.forEach(c=>c.parts.forEach(p=>{if((p.f==="SITELINK"||/^HEADLINE_AS_SITELINK/.test(p.f))&&p.x&&!m.has(p.x))m.set(p.x,{x:p.x,l:p.l||[]})}));return[...m.values()]}
+function seg(key,opts){return `<div class="seg" data-key="${key}" role="group">${opts.map(([v,l])=>`<button type="button" data-v="${v}" aria-pressed="${state[key]===v}">${l}</button>`).join("")}</div>`}
+const PIN_LABEL={H1:"Pinned · headline 1",H2:"Pinned · headline 2",H3:"Pinned · headline 3",D1:"Pinned · description 1",D2:"Pinned · description 2"};
+function textList(title,items,limit,pins){
+  if(!items||!items.length)return "";
+  return `<section class="aset"><h3>${esc(title)} <span class="n">${items.length}</span></h3><ul class="alist">${items.map(t=>{
+    const len=[...t].length,pin=pins&&pins[t];
+    return `<li><span class="at">${esc(t)}</span>${pin?`<span class="pin">${esc(PIN_LABEL[pin]||"Pinned")}</span>`:""}${limit?`<span class="cc${len>limit?" hi":""}">${len}/${limit}</span>`:""}</li>`;
+  }).join("")}</ul></section>`;
+}
+function sitelinkList(items){
+  if(!items||!items.length)return "";
+  return `<section class="aset"><h3>Sitelinks <span class="n">${items.length}</span></h3><ul class="slist">${items.map(s=>`<li><span class="st">${esc(s.x)}</span>${(s.l||[]).map(l=>`<span class="sd">${esc(l)}</span>`).join("")}</li>`).join("")}</ul></section>`;
+}
+function chipList(title,items){
+  if(!items||!items.length)return "";
+  return `<section class="aset"><h3>${esc(title)} <span class="n">${items.length}</span></h3><div class="chips">${items.map(t=>`<span class="chip">${esc(t)}</span>`).join("")}</div></section>`;
+}
+function gallery(title,items,video){
+  if(!items||!items.length)return "";
+  return `<section class="aset wide"><h3>${esc(title)} <span class="n">${items.length}</span></h3><div class="gallery">${items.map(i=>video
+    ?`<figure><a href="https://www.youtube.com/watch?v=${esc(i.vid)}" target="_blank" rel="noopener" title="Watch on YouTube"><img src="${esc(i.img)}" alt="YouTube video ${esc(i.vid)}"></a><figcaption>Watch on YouTube ↗</figcaption></figure>`
+    :`<figure><img src="${esc(i.img)}" alt="">${i.f?`<figcaption>${esc(i.f.toLowerCase().replace(/_/g," "))}</figcaption>`:""}</figure>`).join("")}</div></section>`;
+}
+function servedImages(ad,field){const s=new Set();ad.combos.forEach(c=>c.parts.forEach(p=>{if(p.f===field&&p.img)s.add(p.img)}));return[...s]}
+function detailList(title,items){
+  if(!items||!items.length)return "";
+  return `<section class="aset"><h3>${esc(title)} <span class="n">${items.length}</span></h3><ul class="slist">${items.map(s=>`<li><span class="st">${esc(s.x)}</span>${(s.l||[]).map(l=>`<span class="sd">${esc(l)}</span>`).join("")}</li>`).join("")}</ul></section>`;
+}
+function previewLinksFor(ad){
+  return (DATA.previewLinks||[]).filter(l=>l.campaign===ad.campaign&&(!l.group||l.group===ad.adGroup)&&(!l.adId||l.adId===ad.id));
+}
+const MAX_PREVIEW_URL=16384;
+function previewButtons(ad){
+  const links=previewLinksFor(ad);if(!links.length)return "";
+  const today=new Date(new Date().toDateString());
+  const many=links.length>1;
+  return `<div class="glinks"><span class="gl-lab">Google's preview${many?"s":""}</span>${links.map(l=>{
+    let badge="";
+    if(l.expires){const days=Math.round((new Date(l.expires)-today)/864e5);
+      badge=days<0?`<span class="exp bad">expired</span>`:days<=3?`<span class="exp warn">expires in ${days} day${days===1?"":"s"}</span>`:""}
+    // Google answers 400 Bad Request to preview links over ~16 KB (the full-content kind, not the short reference kind)
+    if(Math.max((l.desktop||"").length,(l.mobile||"").length)>MAX_PREVIEW_URL)
+      badge=`<span class="exp bad" title="Google rejects links this long. Create a new share link for this ad.">link too long, Google won't open it</span>`;
+    const btn=(u,lab)=>u?`<a class="glink" href="${esc(u)}" target="_blank" rel="noopener">${lab} ↗</a>`:"";
+    return `<span class="gl-set">${many?`<span class="gl-n">Ad ${l.n}</span>`:""}${l.single?btn(l.desktop,"Open preview"):btn(l.desktop,"Desktop")+btn(l.mobile,"Mobile")}${badge}</span>`;
+  }).join("")}</div>`;
+}
+function assetsPanel(ad){
+  const x=ad.ext||{},served=ad.combos.length>0;
+  const sitelinks=(x.sitelinks&&x.sitelinks.length)?x.sitelinks:servedSitelinks(ad);
+  const callouts=(x.callouts&&x.callouts.length)?x.callouts:servedTexts(ad,f=>f==="CALLOUT");
+  const snippets=(x.snippets&&x.snippets.length)?x.snippets:servedTexts(ad,f=>f==="STRUCTURED_SNIPPET");
+  const logo=logoFor(ad,[]),logos=(ad.logos&&ad.logos.length)?ad.logos:(logo?[logo]:[]);
+  const imgExt=(x.images&&x.images.length)?x.images:servedImages(ad,"AD_IMAGE");
+  const brand=[bizName(ad,[])].filter(Boolean);
+  const text=`<div class="agrid">${textList("Headlines",ad.headlines,LIMIT.headline,ad.pins)}${textList("Long headlines",ad.longHeadlines,LIMIT.long)}<div class="acol">${textList("Descriptions",ad.descriptions,LIMIT.description,ad.pins)}${commentBox(ad)}</div>${sitelinkList(sitelinks)}${chipList("Callouts",callouts)}${chipList("Structured snippets",snippets)}${detailList("Prices",x.prices)}${detailList("Promotions",x.promotions)}${detailList("Call",x.calls)}${detailList("App",x.apps)}${chipList("Business name",brand)}${ad.cta?chipList("Call to action",[prettyCta(ad.cta)]):""}</div>`;
+  const media=gallery("Images",ad.images)+gallery("Image extensions",imgExt.map(i=>({img:i})))+gallery("Logos",logos.map(l=>({img:l})))+gallery("Videos",ad.videoThumbs,true)+(ad.themes&&ad.themes.length?chipList("Search themes",ad.themes):"");
+  const src=ad.live?`Live in Google Ads as of ${esc(DATA.liveExportedAt)}`
+    :served?"Assets from the ad-copy sheet plus what Google served"
+    :"Assets from the ad-copy sheet";
+  return `<div class="phead"><h3>${ad.live?"Live assets":"Assets"}</h3><span class="src">${src}</span></div>${text}${media?`<div class="agrid media">${media}</div>`:""}`;
+}
+
+/* Comments: served by main.py when the service has COMMENTS=on; anywhere else the box never appears. */
+const cm={on:null,byAd:{},draft:{},err:{}};
+/* Comments only exist on the Railway server. Everywhere else (claude.ai artifact, local file) the box is off from the start. */
+if(!/^https?:$/.test(location.protocol)||/claude/.test(location.hostname)){cm.on=false;cm.pointer=!!DATA.liveUrl}
+const CAPI=["api/notes","api/comments"]; /* same endpoint under two names: some ad blockers filter URLs containing "comment" */
+function whenText(iso){const d=new Date(iso);return isNaN(d)?iso:d.toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}
+function commentBox(ad){
+  /* Off the live server (claude.ai artifact, local file) there are no comments: say where they are instead of showing nothing. */
+  if(cm.on===false)return cm.pointer?`<section class="aset cbox" id="cbox"><h3>Comments</h3><p class="cnone">Comments are on the live dashboard: <a href="${esc(DATA.liveUrl)}" target="_blank" rel="noopener">${esc(DATA.liveUrl.replace(/^https?:\/\//,""))}</a></p></section>`:"";
+  if(cm.err[ad.id])return `<section class="aset cbox" id="cbox">${commentError(ad)}</section>`;
+  const list=cm.byAd[ad.id];
+  if(!list)return `<section class="aset cbox" id="cbox" hidden></section>`;
+  return `<section class="aset cbox" id="cbox">${commentInner(ad,list)}</section>`;
+}
+function commentInner(ad,list){
+  return `<h3>Comments <span class="n">${list.length}</span></h3>
+    <form class="cform" data-ad="${esc(ad.id)}">
+      <label class="sr" for="cName">Your name</label>
+      <input id="cName" name="name" maxlength="80" placeholder="Your name" autocomplete="name" value="${esc(store.get("commentName",""))}">
+      <label class="sr" for="cText">Comment</label>
+      <textarea id="cText" name="text" maxlength="2000" rows="3" placeholder="Add a comment on this ad's copy or assets">${esc(cm.draft[ad.id]||"")}</textarea>
+      <div class="crow"><button type="submit" class="cbtn">Add comment</button><span class="cstat" role="status"></span></div>
+    </form>
+    ${list.length?`<ul class="clist">${list.map(c=>`<li><div class="chead"><b>${esc(c.name)}</b><span>${esc(whenText(c.at))}</span></div><p>${esc(c.text)}</p></li>`).join("")}</ul>`
+      :`<p class="cnone">No comments yet.</p>`}`;
+}
+function commentError(ad){
+  return `<h3>Comments</h3><p class="cnone">Comments couldn't load on this connection (${esc(cm.err[ad.id])}). A browser extension or network filter may be blocking them.</p>
+    <div class="crow"><button type="button" class="cbtn" data-retry="${esc(ad.id)}">Try again</button></div>`;
+}
+function fillComments(ad){
+  const box=$("#cbox");if(!box||state.sel!==ad.id)return;
+  box.innerHTML=commentInner(ad,cm.byAd[ad.id]);box.hidden=false;
+}
+function loadComments(ad,attempt=0){
+  if(cm.on===false||cm.byAd[ad.id])return;
+  /* Try both endpoint names, with a couple of retries for flaky networks. A 404 from both means the server has comments
+     switched off, so the box disappears quietly. Any other failure is shown, never swallowed. */
+  fetch(CAPI[attempt%2]+"?ad="+encodeURIComponent(ad.id),{cache:"no-store"})
+    .then(r=>r.ok?r.json():Promise.reject(r.status))
+    .then(j=>{cm.on=true;delete cm.err[ad.id];cm.byAd[ad.id]=j.comments||[];fillComments(ad)})
+    .catch(why=>{
+      if(why===404&&attempt>=1){cm.on=false;const b=$("#cbox");if(b)b.remove();return}
+      if(attempt<3){setTimeout(()=>loadComments(ad,attempt+1),600*(attempt+1));return}
+      cm.err[ad.id]=why===404?"not found":(typeof why==="number"?"HTTP "+why:"request blocked");
+      const b=$("#cbox");if(b&&state.sel===ad.id){b.innerHTML=commentError(ad);b.hidden=false}
+    });
+}
+$("#detail").addEventListener("click",e=>{
+  const r=e.target.closest("[data-retry]");if(!r)return;
+  const ad=ads.find(a=>a.id===r.dataset.retry);if(!ad)return;
+  delete cm.err[ad.id];const b=$("#cbox");if(b)b.hidden=true;loadComments(ad);
+});
+$("#detail").addEventListener("input",e=>{
+  const f=e.target.closest(".cform");if(!f)return;
+  if(e.target.name==="text")cm.draft[f.dataset.ad]=e.target.value;
+  if(e.target.name==="name")store.set("commentName",e.target.value);
+});
+$("#detail").addEventListener("submit",e=>{
+  const f=e.target.closest(".cform");if(!f)return;
+  e.preventDefault();
+  const ad=ads.find(a=>a.id===f.dataset.ad),stat=f.querySelector(".cstat"),btn=f.querySelector(".cbtn");
+  const name=f.elements.name.value.trim(),text=f.elements.text.value.trim();
+  if(!name){stat.textContent="Add your name first.";f.elements.name.focus();return}
+  if(!text){stat.textContent="Write a comment first.";f.elements.text.focus();return}
+  btn.disabled=true;stat.textContent="Saving…";
+  const send=u=>fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ad:ad.id,name,text})});
+  send(CAPI[0]).catch(()=>send(CAPI[1])) /* first name blocked by a filter: try the other */
+    .then(r=>r.json().then(j=>r.ok?j:Promise.reject(j.error||"Couldn't save the comment.")))
+    .then(j=>{cm.byAd[ad.id]=j.comments||[];cm.draft[ad.id]="";fillComments(ad);const s=$("#cbox .cstat");if(s)s.textContent="Comment added."})
+    .catch(err=>{btn.disabled=false;stat.textContent=typeof err==="string"?err:"Couldn't save the comment. Check your connection and try again."});
+});
+
+function renderDetail(){
+  const el=$("#detail"),ad=ads.find(a=>a.id===state.sel);
+  if(!ad){el.innerHTML=`<div class="panel empty">Pick an ad on the left to see its previews.</div>`;return}
+  const combos=combosOf(ad);if(state.combo>=combos.length)state.combo=0;
+  const combo=combos[state.combo],real=ad.combos.length>0;
+  const range=DATA.dateRange.toLowerCase();
+  const note=real
+    ?(ad.kind==="PMAX"?`Real top combinations reported by Google for this asset group (${esc(range)}). Google ranks them but doesn't report impressions per combination.`
+      :`Real combinations Google served in the ${esc(range)}, ranked by impressions.`)
+    :ad.kind==="DG"?`Google doesn't report which combinations it serves for Demand Gen, so these previews rotate this ad's ${ad.live?"live assets":"headlines and descriptions from the sheet"}.${ad.live?"":" Its images and videos appear once the Live Assets script has run."}`
+    :`No impressions in the ${esc(range)}, so these previews are assembled from the ad's ${ad.live?"live assets":"assets in the ad-copy sheet"}.`;
+
+  let ctrls="";
+  if(ad.kind==="PMAX")ctrls+=seg("pcat",[["TEXT","Search"],["IMAGE","Display & Discover"],["VIDEO","YouTube"]]);
+  if(ad.kind==="PMAX"&&state.pcat==="IMAGE")ctrls+=seg("pfmt",[["display","Display"],["discover","Discover"]]);
+  if(ad.kind==="RSA"||(ad.kind==="PMAX"&&state.pcat==="TEXT"))ctrls+=seg("device",[["desktop","Desktop"],["mobile","Mobile"]]);
+  if(ad.kind==="DG")ctrls+=seg("dgfmt",[["discover","Discover"],["gmail","Gmail"],["youtube","YouTube"]]);
+
+  const maxImp=Math.max(1,...combos.map(c=>c.imp||0));
+  const clist=combos.map((c,i)=>{
+    const P=c.parts,txt=(ad.kind==="PMAX"&&c.cat!=="TEXT")?(textOf(P,/^LONG_HEADLINE/)||heads(P)[0]||""):heads(P).join(" | ");
+    const hasImp=c.imp!=null;
+    return `<button type="button" class="combo" data-i="${i}" aria-pressed="${i===state.combo}"><span class="rk">#${c.rank}</span><span class="tx">${esc(txt||"(no headline)")}${descs(P)[0]?`<span class="d"> — ${esc(descs(P)[0])}</span>`:""}</span><span class="im mono">${hasImp?fmt(c.imp):""}</span>${hasImp?`<span class="bar"><i style="width:${(c.imp/maxImp*100).toFixed(1)}%"></i></span>`:""}</button>`;
+  }).join("")||`<div class="empty">None in this format.</div>`;
+  const share=combo&&combo.imp!=null&&ad.impressions?` · <b class="mono">${pct(combo.imp,ad.impressions)}%</b> of this ad's impressions`:"";
+
+  el.innerHTML=`
+  <div class="panel">
+    <div class="crumb"><span>${esc(ad.account)}</span><span>${esc(ad.campaign)}</span>${ad.adGroup?`<span>${esc(ad.adGroup)}</span>`:""}</div>
+    <h2>${esc(ad.adGroup||(ad.headlines||[])[0]||ad.campaign)}</h2>
+    <div class="meta">
+      <span class="kind ${ad.kind}">${KIND[ad.kind]}</span>
+      <span class="str ${ad.strength?strengthKey(ad.strength):"none"}">Ad strength: ${esc(ad.strength||"not in sheet")}</span>
+      ${ad.impressions?`<span><b class="mono">${fmt(ad.impressions)}</b> impressions</span>`:""}
+      ${ad.kind==="RSA"&&/^\d+$/.test(ad.id)?`<span class="mono" style="font-size:12px">Ad ID ${esc(ad.id)}</span>`:""}
+      ${ad.finalUrl?`<a href="${esc(ad.finalUrl)}" target="_blank" rel="noopener">Landing page ↗</a>`:""}
+    </div>
+    <div class="note${real?" real":""}">${note}</div>
+  </div>
+  <div class="panel">
+    <div class="phead"><h3>Preview</h3><div class="bar">${ctrls}</div></div>
+    ${previewButtons(ad)}
+    <div class="pgrid">
+      <div><div class="stage">${renderPreview(ad,combo)}</div>
+        <div class="stepper"><button type="button" data-step="-1" aria-label="Previous combination">‹</button><span>Combination <b class="mono">${combos.length?state.combo+1:0}</b> of <b class="mono">${combos.length}</b>${share}</span><button type="button" data-step="1" aria-label="Next combination">›</button></div>
+      </div>
+      <div><h3>${real?"Ranked combinations":"Simulated combinations"}</h3><div class="combos">${clist}</div></div>
+    </div>
+  </div>
+  <div class="panel">${assetsPanel(ad)}</div>`;
+  loadComments(ad);
+}
+$("#detail").addEventListener("click",e=>{
+  const s=e.target.closest(".seg[data-key] button");
+  if(s){const k=s.parentElement.dataset.key;state[k]=s.dataset.v;if(k==="pcat")state.combo=0;if(k==="device")store.set("device",state.device);renderDetail();return}
+  const c=e.target.closest(".combo");if(c){state.combo=+c.dataset.i;renderDetail();return}
+  const st=e.target.closest("[data-step]");
+  if(st){const ad=ads.find(a=>a.id===state.sel),n=combosOf(ad).length;if(n){state.combo=(state.combo+Number(st.dataset.step)+n)%n;renderDetail()}}
+});
+document.addEventListener("keydown",e=>{
+  if(e.target.matches("input,select,textarea"))return;
+  if(e.key==="ArrowRight"||e.key==="ArrowLeft"){const b=document.querySelector(`[data-step="${e.key==="ArrowRight"?1:-1}"]`);if(b)b.click()}
+});
+
+/* ---------- horizontal bars (used by the account summary) ---------- */
+function hbars(rows,max,btn){
+  return `<div class="hb">${rows.map(r=>`${btn?`<button type="button" class="lab btn" data-camp="${esc(r.key)}" title="Filter to ${esc(r.label)}">${esc(r.label)}</button>`:`<span class="lab" title="${esc(r.label)}">${esc(r.label)}</span>`}<span class="trk" data-tip="${esc(r.tip)}"><i style="width:${(r.v/max*100).toFixed(1)}%"></i></span><span class="val">${fmt(r.v)}</span>`).join("")}</div>`;
+}
+/* ---------- header + render ---------- */
+function renderHeader(){
+  $("#client").textContent=DATA.client;
+  const exp=new Date(DATA.exportedAt.replace(" ","T"));
+  const when=isNaN(exp)?DATA.exportedAt:exp.toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+  $("#fresh").innerHTML=`<span>Google combinations · <b>${esc(DATA.dateRange)}</b></span><span>Exported from Google Ads <b>${esc(when)}</b></span><span>Dashboard built <b>${esc(DATA.builtAt)}</b></span>${/^https?:$/.test(location.protocol)&&!/claude/.test(location.hostname)?`<a class="refresh" href="api/rebuild">Refresh from ${DATA.source==="api"?"Google Ads":"sheet"}</a>`:""}`;
+}
+function render(){
+  const accts=[...new Set(ads.map(a=>a.account))].sort();
+  segBtns($("#f-account"),[["All","All accounts"],...accts.map(a=>[a,a])],"account");
+  segBtns($("#f-kind"),[["All","All types"],["RSA","Search"],["PMAX","PMax"],["DG","Demand Gen"]],"kind");
+  const pool=ads.filter(a=>(state.account==="All"||a.account===state.account)&&(state.kind==="All"||a.kind===state.kind));
+  const camps=[...new Set(pool.map(a=>a.campaign))].sort();
+  $("#f-campaign").innerHTML=`<option value="All">All campaigns (${camps.length})</option>`+camps.map(c=>`<option value="${esc(c)}"${c===state.campaign?" selected":""}>${esc(c)}</option>`).join("");
+  const list=filtered();
+  if(!list.some(a=>a.id===state.sel))state.sel=((list.find(a=>a.served)||list[0])||{}).id||null;
+  renderList(list);renderDetail();
+}
+$("#f-campaign").onchange=e=>{state.campaign=e.target.value;render()};
+$("#f-q").oninput=e=>{state.q=e.target.value;render()};
+$("#f-unserved").onchange=e=>{state.unserved=e.target.checked;render()};
+const hm=location.hash.match(/^#ad-(.+)$/);
+if(hm&&ads.some(a=>a.id===hm[1]))state.sel=hm[1];
+else{const top=ads.filter(a=>a.served&&a.kind==="RSA").sort((a,b)=>b.impressions-a.impressions)[0];if(top)state.sel=top.id}
+renderHeader();render();
+
+/* ---------- account summary (button, top right) ---------- */
+const CHANNEL={SEARCH:"Search",PERFORMANCE_MAX:"Performance Max",DEMAND_GEN:"Demand Gen",DISPLAY:"Display",VIDEO:"Video",SHOPPING:"Shopping",MULTI_CHANNEL:"App"};
+const sumState={account:null,cache:{}};
+function money(v,cur){try{return new Intl.NumberFormat("en-US",{style:"currency",currency:cur||"USD",maximumFractionDigits:v>=100?0:2}).format(v)}catch(e){return (cur||"")+" "+fmt(Math.round(v))}}
+function perfFor(acc){return (DATA.performance||[]).filter(p=>acc==="All"||p.account===acc)}
+function renderSummary(){
+  const acc=sumState.account,dlg=$("#sumDlg");
+  const accts=[...new Set(ads.map(a=>a.account))].sort();
+  const pool=ads.filter(a=>acc==="All"||a.account===acc),perf=perfFor(acc);
+  const served=pool.filter(a=>a.kind==="RSA"&&a.served);
+  const cur=(perf[0]||{}).currency;
+  const sum=(per,k)=>perf.reduce((s,p)=>s+p[per][k],0);
+  let kpis,charts="",warn="";
+  if(perf.length){
+    const cost=sum("d30","cost"),conv=sum("d30","conv"),clicks=sum("d30","clicks"),impr=sum("d30","impr");
+    const live=perf.reduce((s,p)=>s+p.liveAds,0);
+    kpis=[["Live ads",fmt(live),`across ${perf.length} enabled campaigns`],["Spend (last 30 days)",money(cost,cur),`${money(sum("mtd","cost"),cur)} this month`],
+      ["Clicks (last 30 days)",fmt(clicks),impr?`${(clicks/impr*100).toFixed(2)}% click-through rate`:""],["Conversions (last 30 days)",fmt(Math.round(conv*10)/10),`${fmt(Math.round(sum("mtd","conv")*10)/10)} this month`],
+      ["Cost per conversion",conv?money(cost/conv,cur):"—","last 30 days"],["Search impressions",fmt(served.reduce((s,a)=>s+a.impressions,0)),`${served.length} Search ads served`]];
+    const byCh=new Map();perf.forEach(p=>byCh.set(p.channel,(byCh.get(p.channel)||0)+p.liveAds));
+    const chRows=[...byCh].filter(([,v])=>v).sort((a,b)=>b[1]-a[1]).map(([c,v])=>({label:CHANNEL[c]||c,v,tip:`${CHANNEL[c]||c}: ${v} live ads${c==="PERFORMANCE_MAX"?" (asset groups)":""}`}));
+    const top=[...perf].sort((a,b)=>b.d30.cost-a.d30.cost).slice(0,6).filter(p=>p.d30.cost>0);
+    const spRows=top.map(p=>({label:p.campaign,v:Math.round(p.d30.cost),tip:`${p.campaign} (${p.account}): ${money(p.d30.cost,cur)} spend, ${fmt(p.d30.clicks)} clicks, ${fmt(Math.round(p.d30.conv*10)/10)} conversions`}));
+    charts=`<div class="scharts">
+      <div><p class="ctitle">Live ads by campaign type</p><p class="csub">Enabled ads in enabled campaigns. PMax counts asset groups.</p>${chRows.length?hbars(chRows,Math.max(...chRows.map(r=>r.v)),false):`<p class="csub">No live ads.</p>`}</div>
+      <div><p class="ctitle">Spend by campaign</p><p class="csub">Last 30 days, in ${esc(cur||"account currency")}.</p>${spRows.length?hbars(spRows,Math.max(...spRows.map(r=>r.v)),false):`<p class="csub">No spend in the last 30 days.</p>`}</div></div>`;
+  }else{
+    warn=`<div class="warnbox">Spend, clicks and conversions appear here once the <b>Campaign Performance</b> Google Ads Script has run.</div>`;
+    kpis=[["Search ads served",fmt(served.length),"last 30 days"],["Search impressions",fmt(served.reduce((s,a)=>s+a.impressions,0)),"from served combinations"],
+      ["PMax asset groups",fmt(pool.filter(a=>a.kind==="PMAX").length),""],["Demand Gen ads",fmt(pool.filter(a=>a.kind==="DG").length),"in the ad-copy sheet"],
+      ["Search ads not served",fmt(pool.filter(a=>a.kind==="RSA"&&!a.served).length),"no impressions in 30 days"],["Real combinations",fmt(pool.reduce((s,a)=>s+a.combos.length,0)),"reported by Google"]];
+  }
+  const asOf=DATA.perfExportedAt||DATA.exportedAt;
+  dlg.innerHTML=`<div class="shd"><div><h2>${esc(DATA.client)} account summary</h2><div class="sub">Data as of ${esc(asOf)} · ${esc(acc==="All"?"all accounts":acc)}</div></div>
+      <div class="bar">${`<div class="seg" id="sumAcct" role="group" aria-label="Account">${[["All","All accounts"],...accts.map(a=>[a,a])].map(([v,l])=>`<button type="button" data-v="${esc(v)}" aria-pressed="${acc===v}">${esc(l)}</button>`).join("")}</div>`}
+      <button type="button" class="back" id="sumClose"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg>Back to dashboard</button></div></div>
+    <div class="sbody">${warn}
+      <div class="kpis">${kpis.map(([l,v,d])=>`<div class="kpi"><div class="l">${esc(l)}</div><div class="v">${esc(v)}</div>${d?`<div class="d">${esc(d)}</div>`:""}</div>`).join("")}</div>
+      ${charts}
+      <div class="ai" id="aiBox"><h3>What's happening</h3><div id="aiText"><span class="pulse"></span>Writing the summary…</div></div>
+    </div>`;
+  loadAiSummary(acc);
+}
+function aiHtml(text){
+  const lines=text.split(/\n+/).map(s=>s.trim()).filter(Boolean);let html="",list=[];
+  const flush=()=>{if(list.length){html+=`<ul>${list.map(l=>`<li>${esc(l)}</li>`).join("")}</ul>`;list=[]}};
+  lines.forEach(l=>{if(/^[-•*]\s+/.test(l))list.push(l.replace(/^[-•*]\s+/,""));else{flush();html+=`<p>${esc(l)}</p>`}});flush();return html;
+}
+async function loadAiSummary(acc){
+  const box=()=>document.getElementById("aiText");
+  const done=(html)=>{if(sumState.account===acc&&box())box().innerHTML=html};
+  if(sumState.cache[acc])return done(sumState.cache[acc]);
+  try{
+    const r=await fetch(`api/summary?account=${encodeURIComponent(acc)}`,{headers:{Accept:"application/json"}});
+    const j=await r.json().catch(()=>({error:"The summary service isn't available on this copy of the dashboard."}));
+    if(!r.ok||!j.text)return done(`<p class="err">${esc(j.error||"The summary couldn't be written just now.")}</p>`);
+    const html=aiHtml(j.text)+`<div class="foot">Written by ${esc(j.model)} from the figures above. Refreshes with each data update.</div>`;
+    sumState.cache[acc]=html;done(html);
+  }catch(e){done(`<p class="err">The AI-written summary runs on the hosted dashboard. The figures above are live from the data.</p>`)}
+}
+$("#sumBtn").addEventListener("click",()=>{sumState.account=state.account;renderSummary();const d=$("#sumDlg");if(!d.open)d.showModal()});
+$("#sumDlg").addEventListener("click",e=>{
+  if(e.target.id==="sumDlg"||e.target.closest("#sumClose")){$("#sumDlg").close();return}
+  const b=e.target.closest("#sumAcct button");if(b){sumState.account=b.dataset.v;renderSummary()}
+});
+</script>
