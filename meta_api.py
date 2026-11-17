@@ -205,43 +205,47 @@ def creative_fields(cr):
             "format": fmt, "cards": carousel, "variants": {"bodies": bodies, "titles": titles}}
 
 
+def _each(api, ids, fields, extra=None, workers=8):
+    """id -> object for each id, one Graph call per id (the batched `ids=` parameter is deprecated from API v26).
+    A failing id is skipped; the first error message is printed once so a systematic problem is visible in the log."""
+    from concurrent.futures import ThreadPoolExecutor
+    errors = []
+
+    def one(i):
+        try:
+            return i, api.get(i, {"fields": fields, **(extra or {})})
+        except RuntimeError as e:
+            errors.append(str(e))
+            return i, None
+
+    with ThreadPoolExecutor(workers) as ex:
+        res = dict(ex.map(one, ids))
+    if errors:
+        print(f"! {len(errors)} of {len(ids)} lookups failed ({fields.split(',')[0]}...): {errors[0]}")
+    return {k: v for k, v in res.items() if isinstance(v, dict)}
+
+
 def video_info(api, video_ids):
-    """video id -> {length, thumb, permalink}; batched so a big account costs a handful of calls.
-    `thumb` is the largest thumbnail Meta has: the plain `picture` field is only ~160px, which is what made previews blurry."""
-    out, ids = {}, sorted(set(i for i in video_ids if i))
-    for i in range(0, len(ids), 40):
-        chunk = ids[i:i + 40]
-        res = None
-        for fields in ("length,picture,permalink_url,title,thumbnails{uri,width,height,is_preferred}",
-                       "length,picture,permalink_url,title"):
-            try:
-                res = api.get("", {"ids": ",".join(chunk), "fields": fields})
-                break
-            except RuntimeError as e:
-                print(f"! video details skipped for {len(chunk)} videos ({e})")
-        for vid, v in (res or {}).items():
-            thumbs = ((v.get("thumbnails") or {}).get("data")) or []
-            best = max(thumbs, key=lambda t: (_n(t.get("width")) * _n(t.get("height")), bool(t.get("is_preferred"))), default=None)
-            out[vid] = {"length": _n(v.get("length")), "thumb": (best or {}).get("uri") or v.get("picture") or "",
-                        "permalink": v.get("permalink_url") or ""}
+    """video id -> {length, thumb, permalink}. `thumb` is the largest thumbnail Meta has: the plain `picture`
+    field is only ~160px, which is what made previews blurry."""
+    ids = sorted(set(i for i in video_ids if i))
+    res = _each(api, ids, "length,picture,permalink_url,title,thumbnails{uri,width,height,is_preferred}")
+    if ids and not res:  # the thumbnails edge may be refused for this token: retry without it
+        res = _each(api, ids, "length,picture,permalink_url,title")
+    out = {}
+    for vid, v in res.items():
+        thumbs = ((v.get("thumbnails") or {}).get("data")) or []
+        best = max(thumbs, key=lambda t: (_n(t.get("width")) * _n(t.get("height")), bool(t.get("is_preferred"))), default=None)
+        out[vid] = {"length": _n(v.get("length")), "thumb": (best or {}).get("uri") or v.get("picture") or "",
+                    "permalink": v.get("permalink_url") or ""}
     return out
 
 
 def creative_thumbs(api, creative_ids, px=1080):
     """creative id -> a sharper thumbnail. The default thumbnail_url is ~64px, which is why catalog ads looked blurry."""
-    out, ids = {}, sorted(set(i for i in creative_ids if i))
-    for i in range(0, len(ids), 40):
-        chunk = ids[i:i + 40]
-        try:
-            res = api.get("", {"ids": ",".join(chunk), "fields": "thumbnail_url",
-                               "thumbnail_width": px, "thumbnail_height": px})
-        except RuntimeError as e:
-            print(f"! hi-res thumbnails skipped for {len(chunk)} creatives ({e})")
-            continue
-        for cid, v in res.items():
-            if isinstance(v, dict) and v.get("thumbnail_url"):
-                out[cid] = v["thumbnail_url"]
-    return out
+    ids = sorted(set(i for i in creative_ids if i))
+    res = _each(api, ids, "thumbnail_url", {"thumbnail_width": px, "thumbnail_height": px})
+    return {cid: v["thumbnail_url"] for cid, v in res.items() if v.get("thumbnail_url")}
 
 
 PREVIEW_FORMATS = ("MOBILE_FEED_STANDARD", "DESKTOP_FEED_STANDARD", "INSTAGRAM_STANDARD", "INSTAGRAM_STORY",
