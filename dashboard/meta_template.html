@@ -55,6 +55,7 @@ h1{font-size:26px;font-weight:700}
 .kpi .v{font:700 22px var(--display);margin-top:2px}
 .kpi .s{font-size:12px;color:var(--faint)}
 .two{grid-template-columns:repeat(auto-fit,minmax(360px,1fr))}
+.three{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
 @media(max-width:480px){.two{grid-template-columns:1fr}}
 .sec{margin-top:24px}
 .sec>h2{font-size:18px;margin-bottom:4px}
@@ -130,6 +131,21 @@ tr.sub td{background:var(--sunk);padding:6px 10px}
 #drawer .x{position:sticky;top:0;float:right;z-index:3}
 iframe.live{width:100%;max-width:440px;height:680px;border:1px solid var(--line);border-radius:10px;background:#fff}
 svg text{font:11px var(--ui);fill:var(--muted)}
+.vdef .vgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:end}
+.vdef label{display:grid;gap:3px;font-size:12px;color:var(--muted);font-weight:600}
+.vdef input[type=number]{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.vdef label.chk{display:flex;gap:6px;align-items:center;align-self:center}
+.vdefs{display:grid;gap:6px;margin-top:12px}
+.vdefs div{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.vdefs .chip{min-width:92px;justify-content:center}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.pv{background:var(--sunk);border-radius:10px;min-height:260px;display:grid;place-items:center;position:relative;overflow:hidden}
+.pv>img{width:100%;height:auto;display:block;max-height:560px;object-fit:contain;background:#000}
+.pv .pvmsg{position:absolute;left:8px;right:8px;bottom:8px;background:rgba(0,0,0,.68);color:#fff;border-radius:8px;padding:6px 10px;font-size:12px}
+.pv iframe{border:0;background:#fff;max-width:100%;display:block;margin:0 auto}
+.hero{width:100%;max-height:520px;object-fit:contain;background:#000;border-radius:10px;display:block}
+.ptext{white-space:pre-wrap;overflow-wrap:anywhere;margin:10px 0 0}
+.kv{display:grid;gap:2px;margin-top:8px;font-size:13px}.kv b{font-weight:600}
 </style>
 
 <div class="wrap">
@@ -228,56 +244,136 @@ function parseAd(a){
 }
 ads.forEach(a=>{a.p=parseAd(a);a.active=a.status==="ACTIVE"});
 
-/* ------------------------------------------------------------------ verdicts */
+/* ------------------------------------------------------------------ status labels (Meta's effective_status) */
+const STATUS_LBL={ACTIVE:"Active",PAUSED:"Paused",ADSET_PAUSED:"Ad set paused",CAMPAIGN_PAUSED:"Campaign paused",ARCHIVED:"Archived",DELETED:"Deleted",PENDING_REVIEW:"In review",DISAPPROVED:"Disapproved",WITH_ISSUES:"With issues",IN_PROCESS:"Processing",PREAPPROVED:"Pre-approved",PENDING_BILLING_INFO:"Billing issue"};
+const statusLbl=s=>STATUS_LBL[s]||String(s||"Unknown").toLowerCase().replace(/_/g," ").replace(/^./,x=>x.toUpperCase());
+
+/* ------------------------------------------------------------------ smart grouping: ads -> creatives
+   Ads are one creative when they share the Ad number in the name, OR the same video, OR the same image,
+   OR (same hook words in the name + same format + same creator), OR (static ads with identical primary text + headline).
+   Catalog / dynamic ads are never joined on copy because their text is a placeholder. Manual merges sit on top of this. */
+let SMART=store.get("smart",true);
+function clusterAds(){
+  const par={},find=x=>{while(par[x]!==x){par[x]=par[par[x]];x=par[x]}return x};
+  const uni=(x,y)=>{if(!(x in par))par[x]=x;if(!(y in par))par[y]=y;const a=find(x),b=find(y);if(a!==b)par[a]=b};
+  ads.forEach(a=>{
+    const sig=["k:"+a.p.key];
+    if(SMART){
+      if(a.videoId)sig.push("v:"+a.videoId);
+      if(a.imageHash)sig.push("i:"+a.imageHash);
+      if(a.p.hookFrom==="name"&&norm(a.p.hook).length>=12)sig.push("h:"+norm(a.p.hook)+"|"+a.p.fmt+"|"+a.p.creator);
+      const txt=norm(placeholderless(a.body)+"|"+placeholderless(a.title));
+      if(a.p.fmt==="Static"&&!a.imageHash&&!isDyn(a)&&txt.length>=40)sig.push("t:"+txt);
+    }
+    sig.forEach(s=>uni("a:"+a.id,s));
+  });
+  const members={};
+  ads.forEach(a=>{const r=find("a:"+a.id);(members[r]||(members[r]=[])).push(a)});
+  Object.values(members).forEach(l=>{const key=l.map(a=>a.p.key).sort()[0];l.forEach(a=>a.ck=key)});
+}
+
+/* ------------------------------------------------------------------ verdicts: Working / Not working / Too early
+   The definition is the user's: metric, benchmark, thresholds and the "too early" floor are all adjustable (saved in this browser). */
 const ALL=agg(ads),BASE=rates(ALL);
 const VIDEO_ADS=ads.filter(a=>a.p.fmt==="Video"),VBASE=rates(agg(VIDEO_ADS));
 const hasResults=ALL[RESKEY]>0,hasValue=ALL.value>0;
 const MIN_SPEND=Math.max(10,ALL.spend*0.0075),MIN_IMPR=1000;
+const VM={ /* hi = higher is better; pct = shown/typed as a percentage */
+  roas:{l:"ROAS",hi:1,f:x2,base:()=>T.roas||BASE.roas},
+  cpa:{l:"CPA",hi:0,f:money,base:()=>T.cpa||BASE.cpa},
+  ctr:{l:"CTR",hi:1,pct:1,f:v=>pct(v,2),base:()=>BASE.ctr},
+  cpc:{l:"CPC",hi:0,f:money,base:()=>BASE.cpc},
+  cpm:{l:"CPM",hi:0,f:money,base:()=>BASE.cpm},
+  eng:{l:"Engagement rate",hi:1,pct:1,f:v=>pct(v,2),base:()=>BASE.eng},
+  cvr:{l:"Conversion rate",hi:1,pct:1,f:v=>pct(v,1),base:()=>BASE.cvr},
+  hook:{l:"Video hook rate",hi:1,pct:1,video:1,f:v=>pct(v,1),base:()=>T.hookRate||VBASE.hook},
+  hold:{l:"ThruPlay rate",hi:1,pct:1,video:1,f:v=>pct(v,1),base:()=>VBASE.hold},
+};
+const VDEF0={metric:"auto",bench:"avg",custom:"",win:15,lose:15,minSpend:Math.round(MIN_SPEND),minImpr:MIN_IMPR,zeroRes:true};
+let V={...VDEF0,...store.get("vdef",{})};
+const autoId=()=>hasResults?(hasValue?"roas":"cpa"):"ctr";
+const curId=()=>V.metric==="auto"?autoId():(VM[V.metric]?V.metric:autoId());
+function benchFor(id){const s=VM[id];if(V.bench==="custom"){const c=parseFloat(V.custom);if(c>0)return s.pct?c/100:c}return s.base()}
+function benchSrc(id){return V.bench==="custom"&&parseFloat(V.custom)>0?"your target":((id==="roas"&&T.roas)||(id==="cpa"&&T.cpa)||(id==="hook"&&T.hookRate))?"client target":"account average"}
 function verdict(m,isVideo){
-  const r=rates(m),why=[];
-  if(m.impr<MIN_IMPR||m.spend<MIN_SPEND)return{k:"early",label:"Too early",why:["Not enough spend or impressions yet ("+money(m.spend)+", "+num(m.impr)+" impr.)"],score:0};
-  let score=0;const cpaBase=T.cpa||BASE.cpa,roasBase=T.roas||BASE.roas;
-  if(hasResults){
-    if(m[RESKEY]===0){score=-2;why.push(money(m.spend)+" spent, no "+RESLBL.toLowerCase())}
-    else if((T.roas&&r.roas!=null)||(hasValue&&!T.cpa&&r.roas!=null)){const q=r.roas/roasBase;score=q>=1.15?1:q<=.85?-1:0;why.push("ROAS "+x2(r.roas)+" vs "+x2(roasBase)+(T.roas?" target":" account avg"))}
-    else{const q=r.cpa/cpaBase;score=q<=.85?1:q>=1.2?-1:0;why.push("CPA "+money(r.cpa)+" vs "+money(cpaBase)+(T.cpa?" target":" account avg"))}
-  }else if(BASE.ctr){const q=r.ctr/BASE.ctr;score=q>=1.15?1:q<=.85?-1:0;why.push("CTR "+pct(r.ctr,2)+" vs "+pct(BASE.ctr,2)+" account avg")}
-  if(isVideo&&r.hook!=null&&VBASE.hook){
-    const t=T.hookRate||VBASE.hook,q=r.hook/t;why.push("Hook rate "+pct(r.hook)+" vs "+pct(t)+(T.hookRate?" target":" video avg"));
-    if(score===0)score=q>=1.2?.5:q<=.75?-.5:0;
+  const r=rates(m),why=[],minS=+V.minSpend||0,minI=+V.minImpr||0;
+  if(m.impr<minI||m.spend<minS)return{k:"early",label:"Too early",why:["Below the 'too early' floor: "+money(m.spend)+" spend, "+num(m.impr)+" impressions (needs "+money(minS)+" and "+num(minI)+")"],score:0};
+  let id=curId();
+  if(VM[id].video&&!isVideo){id=autoId();why.push(VM[curId()].l+" is video-only, judged on "+VM[id].l+" instead")}
+  const s=VM[id],val=r[id],b=benchFor(id);
+  if(V.zeroRes&&hasResults&&["roas","cpa","cvr"].includes(id)&&m[RESKEY]===0){why.push(money(m.spend)+" spent, no "+RESLBL.toLowerCase());return{k:"lose",label:"Not working",why,score:-2}}
+  if(val==null||!b){why.push("No "+s.l+" yet");return{k:"avg",label:"Average",why,score:0}}
+  const q=val/b,w=V.win/100,l=V.lose/100;
+  const good=s.hi?q>=1+w:q<=1-w,bad=s.hi?q<=1-l:q>=1+l;
+  let score=good?1:bad?-1:0;
+  why.push(s.l+" "+s.f(val)+" vs "+s.f(b)+" "+benchSrc(id));
+  if(V.metric==="auto"&&isVideo&&r.hook!=null&&VBASE.hook){
+    const t=T.hookRate||VBASE.hook,hq=r.hook/t;why.push("Hook rate "+pct(r.hook)+" vs "+pct(t)+(T.hookRate?" target":" video avg"));
+    if(score===0)score=hq>=1.2?.5:hq<=.75?-.5:0;
     if(r.hold!=null&&VBASE.hold&&r.hold<VBASE.hold*.7)why.push("Viewers drop off early (ThruPlay "+pct(r.hold)+" of 3s plays)");
   }
   const k=score>0?"win":score<0?"lose":"avg";
   return{k,label:{win:"Working",lose:"Not working",avg:"Average",early:"Too early"}[k],why,score};
 }
 const chip=v=>`<span class="chip v-${v.k}" title="${esc(v.why.join(" · "))}">${v.label}</span>`;
+function defLines(){
+  const id=curId(),s=VM[id],b=benchFor(id),w=V.win/100,l=V.lose/100,src=benchSrc(id),hi=s.hi;
+  const ok=b?true:false,t=(x)=>ok?s.f(x):"–";
+  return[
+    {k:"win",label:"Working",text:`${s.l} ${hi?"at or above":"at or below"} <b>${t(hi?b*(1+w):b*(1-w))}</b> (${V.win}% better than the ${src} of ${t(b)}).`},
+    {k:"lose",label:"Not working",text:`${s.l} ${hi?"at or below":"at or above"} <b>${t(hi?b*(1-l):b*(1+l))}</b> (${V.lose}% worse than the ${src})${V.zeroRes&&hasResults&&["roas","cpa","cvr"].includes(id)?`, or spend with zero ${RESLBL.toLowerCase()}`:""}.`},
+    {k:"early",label:"Too early",text:`Less than <b>${money(+V.minSpend||0)}</b> spent <b>or</b> fewer than <b>${num(+V.minImpr||0)}</b> impressions.`},
+    {k:"avg",label:"Average",text:`Anything in between.${V.metric==="auto"?" For video, hook rate and drop-off break ties.":""}`}];
+}
+function vdefPanel(){
+  const sel=(v,l)=>`<option value="${v}" ${V.metric===v?"selected":""}>${l}</option>`,id=curId(),s=VM[id];
+  return`<div class="card vdef"><div class="vgrid">
+    <label>Judge creatives by<select data-v="metric">${sel("auto","Auto (ROAS, else CPA, else CTR)")}${Object.entries(VM).map(([k,x])=>sel(k,x.l+(x.video?" (video only)":""))).join("")}</select></label>
+    <label>Compare against<select data-v="bench"><option value="avg" ${V.bench==="avg"?"selected":""}>Account average</option><option value="custom" ${V.bench==="custom"?"selected":""}>My own target</option></select></label>
+    ${V.bench==="custom"?`<label>Target ${esc(s.l)}${s.pct?" (%)":""}<input type="number" step="any" min="0" data-v="custom" value="${esc(V.custom)}" placeholder="e.g. ${s.pct?"1.5":"2.5"}"></label>`:""}
+    <label>Working if better by (%)<input type="number" min="0" step="5" data-v="win" value="${V.win}"></label>
+    <label>Not working if worse by (%)<input type="number" min="0" step="5" data-v="lose" value="${V.lose}"></label>
+    <label>Too early below spend (${esc(CUR)})<input type="number" min="0" step="5" data-v="minSpend" value="${V.minSpend}"></label>
+    <label>Too early below impressions<input type="number" min="0" step="500" data-v="minImpr" value="${V.minImpr}"></label>
+    <label class="chk"><input type="checkbox" data-v="zeroRes" ${V.zeroRes?"checked":""}> Spend with zero ${esc(RESLBL.toLowerCase())} = not working</label>
+    <button class="btn alt" type="button" data-vreset>Reset</button></div>
+    <div class="vdefs">${defLines().map(d=>`<div><span class="chip v-${d.k}">${d.label}</span><span>${d.text}</span></div>`).join("")}</div></div>`;
+}
 
 /* ------------------------------------------------------------------ groups: creatives, creators, hooks ... */
 let merges=[],mergeShared=false;
-const state={tab:store.get("tab","creatives"),open:null,openCreators:new Set(),fmt:"All",q:"",status:"All",camp:"All",hideTiny:false};
+const state={tab:store.get("tab","creatives"),open:null,openCreators:new Set(),fmt:"All",q:"",status:"All",camp:"All",adset:"All",hideTiny:false,
+  ret:store.get("ret","cr"),level:store.get("level","camp"),pvfmt:store.get("pvfmt","MOBILE_FEED_STANDARD"),pvN:12,showAll:{}};
 const selAd=new Set(),selCr=new Set(),sorts={};
-let D={};
+let D={},FULL={};
+const firstLine=t=>{const l=String(t||"").split(/\n/).map(x=>x.trim()).find(Boolean)||"";return l.length>110?l.slice(0,109)+"…":l};
 function makeGroup(key,list,name){
   const rep=list.slice().sort((a,b)=>b.m.spend-a.m.spend)[0],m=agg(list),p=rep.p;
   const withThumb=list.filter(a=>a.thumb).sort((a,b)=>b.m.spend-a.m.spend)[0];
+  const withBody=list.filter(a=>placeholderless(a.body)).sort((a,b)=>b.m.spend-a.m.spend)[0];
   return{key,ads:list,m,r:rates(m),rep,p,name:name||p.title,fmt:p.fmt,bf:list.some(a=>a.p.bf),thumb:withThumb?withThumb.thumb:"",
+    ptHook:withBody?firstLine(placeholderless(withBody.body)):"",
     manual:key.startsWith("m:"),adsets:new Set(list.map(a=>a.adsetId||a.adset)).size,active:list.some(a=>a.active),
     v:verdict(m,p.fmt==="Video"),creator:p.creator||(p.source==="Creator"?"Creator (unnamed)":"Brand / no creator")};
 }
 function groupBy(list,keyFn,mk){const mp=new Map();list.forEach(x=>{const k=keyFn(x);if(!mp.has(k))mp.set(k,[]);mp.get(k).push(x)});return[...mp].map(([k,l])=>mk(k,l))}
-function rebuild(){
+function build(list){
   const owner=new Map();merges.forEach(g=>g.ads.forEach(id=>owner.set(id,g)));
-  const cr=groupBy(ads,a=>owner.has(a.id)?"m:"+owner.get(a.id).id:a.p.key,(k,l)=>makeGroup(k,l,k.startsWith("m:")?(merges.find(g=>"m:"+g.id===k)||{}).name:""));
+  const cr=groupBy(list,a=>owner.has(a.id)?"m:"+owner.get(a.id).id:a.ck,(k,l)=>makeGroup(k,l,k.startsWith("m:")?(merges.find(g=>"m:"+g.id===k)||{}).name:""));
   const byKey={};cr.forEach(g=>byKey[g.key]=g);
-  const sub=(arr,keyFn,fmtFn)=>groupBy(arr,keyFn,(k,l)=>{const ads2=l.flatMap(g=>g.ads),m=agg(ads2);
+  const sub=(arr,keyFn)=>groupBy(arr,keyFn,(k,l)=>{const ads2=l.flatMap(g=>g.ads),m=agg(ads2);
     return{key:k,list:l,ads:ads2,m,r:rates(m),v:verdict(m,l.every(g=>g.fmt==="Video")),video:l.some(g=>g.fmt==="Video")}});
-  D={creatives:cr,byKey,
+  const d={creatives:cr,byKey,
     creators:sub(cr,g=>g.creator),
-    hooks:sub(cr,g=>norm(g.p.hook).slice(0,60)||"nohook"),
+    hooks:sub(cr,g=>norm(g.ptHook).slice(0,60)||"nohook"),
     skus:sub(cr,g=>g.p.sku||"No SKU tag"),fmts:sub(cr,g=>g.fmt||"Other"),
-    sources:sub(cr,g=>g.p.source),adById:Object.fromEntries(ads.map(a=>[a.id,a]))};
-  D.hooks.forEach(h=>h.label=h.list.slice().sort((a,b)=>b.m.spend-a.m.spend)[0].p.hook||"(no hook text)");
+    sources:sub(cr,g=>g.p.source),adById:Object.fromEntries(list.map(a=>[a.id,a]))};
+  d.hooks.forEach(h=>h.label=h.list.slice().sort((a,b)=>b.m.spend-a.m.spend)[0].ptHook||"(no primary text: catalog / dynamic ads)");
+  return d;
 }
+/* FULL = every ad (used by the detail drawer and merging); D = only the ads that pass the current filters (used by every table) */
+function rebuild(){clusterAds();FULL=build(ads);refilter()}
+function refilter(){D=build(ads.filter(okAd))}
 
 /* ------------------------------------------------------------------ table component */
 const COLS={
@@ -294,7 +390,7 @@ const COLS={
   cpc:{l:"CPC",v:g=>g.r.cpc,f:money,low:true},
   cpm:{l:"CPM",v:g=>g.r.cpm,f:money,low:true},
   impr:{l:"Impr.",v:g=>g.m.impr,f:num},
-  hook:{l:"Hook rate",v:g=>g.m.plays3s?g.r.hook:null,f:v=>pct(v,1),tip:"3-second plays ÷ impressions (video)"},
+  hook:{l:"3s hook rate",v:g=>g.m.plays3s?g.r.hook:null,f:v=>pct(v,1),tip:"3-second plays ÷ impressions (video)"},
 };
 const MAIN_COLS=["spend","clicks","ctr","eng","purch","cpa","roas","rev","aov","cvr","cpc","cpm","hook"];
 const sortVal=(row,k,leadFn)=>k==="lead"?leadFn(row):k==="verdict"?(row.v?row.v.score:0):(COLS[k]?COLS[k].v(row):0);
@@ -318,65 +414,85 @@ const leadAd=a=>`<div class="row">${thumbHtml(a)}<div style="min-width:0"><b>${e
 function mergeBar(kind){
   const set=kind==="ad"?selAd:selCr;if(set.size<2&&!set.size)return"";
   if(set.size<2)return`<div class="mergebar"><span>${set.size} selected. Tick at least 2 to merge their insights.</span><button class="btn alt" data-clear="${kind}">Clear</button></div>`;
-  const first=kind==="ad"?D.adById[[...set][0]].p.title:D.byKey[[...set][0]].name;
+  const first=kind==="ad"?FULL.adById[[...set][0]].p.title:FULL.byKey[[...set][0]].name;
   return`<div class="mergebar"><b>${set.size} selected</b><input type="text" id="mergeName" value="${esc(first)}" size="34" aria-label="Name for the merged creative"><button class="btn" data-merge="${kind}">Merge insights</button><button class="btn alt" data-clear="${kind}">Clear</button><span class="small">${mergeShared?"Saved for everyone using this dashboard.":"Saved in this browser only (no shared storage on the server)."}</span></div>`;
 }
 function filters(){
-  const camps=[...new Set(ads.map(a=>a.campaign))].sort(),fm=["All",...new Set(ads.map(a=>a.p.fmt))];
-  return`<div class="ctrl"><input type="search" id="q" placeholder="Search name, hook, creator, campaign" value="${esc(state.q)}" style="min-width:230px">
+  const inCamp=a=>state.camp==="All"||a.campaign===state.camp;
+  const camps=[...new Set(ads.map(a=>a.campaign))].sort(),sets=[...new Set(ads.filter(inCamp).map(a=>a.adset))].sort(),fm=["All",...new Set(ads.map(a=>a.p.fmt))];
+  const sc={};ads.forEach(a=>sc[a.status]=(sc[a.status]||0)+1);
+  const nAct=sc.ACTIVE||0,sopts=[["All","All statuses ("+ads.length+")"],["ACTIVE","Active ("+nAct+")"],["INACTIVE","Inactive: anything not active ("+(ads.length-nAct)+")"],
+    ...Object.keys(sc).filter(s=>s!=="ACTIVE").sort().map(s=>[s,statusLbl(s)+" ("+sc[s]+")"])];
+  return`<div class="ctrl"><input type="search" id="q" placeholder="Search name, copy, creator, campaign" value="${esc(state.q)}" style="min-width:210px">
     <div class="seg">${fm.map(f=>`<button type="button" data-fmt="${esc(f)}" aria-pressed="${state.fmt===f}">${esc(f)}</button>`).join("")}</div>
-    <select id="fs">${["All","Active","Not active"].map(c=>`<option ${state.status===c?"selected":""}>${c}</option>`).join("")}</select>
-    <select id="fc"><option value="All">All campaigns</option>${camps.map(c=>`<option ${state.camp===c?"selected":""}>${esc(c)}</option>`).join("")}</select>
+    <select id="fs" aria-label="Status">${sopts.map(([v,l])=>`<option value="${v}" ${state.status===v?"selected":""}>${esc(l)}</option>`).join("")}</select>
+    <select id="fc" aria-label="Campaign"><option value="All">All campaigns</option>${camps.map(c=>`<option value="${esc(c)}" ${state.camp===c?"selected":""}>${esc(c)}</option>`).join("")}</select>
+    <select id="fa" aria-label="Ad set"><option value="All">All ad sets</option>${sets.map(c=>`<option value="${esc(c)}" ${state.adset===c?"selected":""}>${esc(c)}</option>`).join("")}</select>
     <label class="small"><input type="checkbox" id="tiny" ${state.hideTiny?"checked":""}> hide tiny spend</label></div>`;
 }
-const okAd=a=>(state.fmt==="All"||a.p.fmt===state.fmt)&&(state.camp==="All"||a.campaign===state.camp)&&(state.status==="All"||(state.status==="Active"?a.active:!a.active))
-  &&(!state.hideTiny||a.m.spend>=MIN_SPEND)&&(!state.q||(a.name+" "+a.p.hook+" "+a.p.creator+" "+a.campaign+" "+a.adset+" "+a.p.sku).toLowerCase().includes(state.q.toLowerCase()));
-const okGroup=g=>g.ads.some(okAd);
+const okStatus=a=>state.status==="All"||(state.status==="ACTIVE"?a.status==="ACTIVE":state.status==="INACTIVE"?a.status!=="ACTIVE":a.status===state.status);
+const okAd=a=>(state.fmt==="All"||a.p.fmt===state.fmt)&&(state.camp==="All"||a.campaign===state.camp)&&(state.adset==="All"||a.adset===state.adset)&&okStatus(a)
+  &&(!state.hideTiny||a.m.spend>=MIN_SPEND)&&(!state.q||(a.name+" "+a.p.hook+" "+placeholderless(a.body)+" "+a.p.creator+" "+a.campaign+" "+a.adset+" "+a.p.sku).toLowerCase().includes(state.q.toLowerCase()));
 function bindFilters(rerender){
   const q=$("#q");q&&(q.oninput=e=>{state.q=e.target.value;const pos=e.target.selectionStart;rerender();const n=$("#q");n.focus();n.setSelectionRange(pos,pos)});
   const fs=$("#fs");fs&&(fs.onchange=e=>{state.status=e.target.value;rerender()});
-  const fc=$("#fc");fc&&(fc.onchange=e=>{state.camp=e.target.value;rerender()});
+  const fc=$("#fc");fc&&(fc.onchange=e=>{state.camp=e.target.value;state.adset="All";rerender()});
+  const fa=$("#fa");fa&&(fa.onchange=e=>{state.adset=e.target.value;rerender()});
   const t=$("#tiny");t&&(t.onchange=e=>{state.hideTiny=e.target.checked;rerender()});
 }
+/* every tab re-filters first, so tables, KPIs and groups all reflect the filter bar */
 const kpi=(l,v,s)=>`<div class="card kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s||""}</div></div>`;
-function kpiRow(m,r){return`<div class="grid kpis">${kpi("Spend",money(m.spend),num(m.impr)+" impressions")}${kpi("Clicks",num(m.linkClicks||m.clicks),"CTR "+pct(r.ctr,2)+" · CPC "+money(r.cpc))}${kpi("Engagement rate",pct(r.eng,2),num(m.engagement)+" engagements")}${kpi(RESLBL,num(m[RESKEY]),"CPA "+money(r.cpa)+" · CVR "+pct(r.cvr,1))}${kpi("ROAS",x2(r.roas),"Revenue "+money(m.value)+" · AOV "+money(r.aov))}${kpi("Hook rate",pct(VBASE.hook),"video 3s plays ÷ impr.")}</div>`}
+function kpiRow(m,r){return`<div class="grid kpis">${kpi("Spend",money(m.spend),num(m.impr)+" impressions")}${kpi("Clicks",num(m.linkClicks||m.clicks),"CTR "+pct(r.ctr,2)+" · CPC "+money(r.cpc))}${kpi("CPM",money(r.cpm),"cost per 1,000 impressions")}${kpi("Engagement rate",pct(r.eng,2),num(m.engagement)+" engagements")}${kpi(RESLBL,num(m[RESKEY]),"CPA "+money(r.cpa)+" · CVR "+pct(r.cvr,1))}${kpi("ROAS",x2(r.roas),"Revenue "+money(m.value)+" · AOV "+money(r.aov))}${kpi("Hook rate",pct(rates(agg(VIDEO_ADS.filter(okAd))).hook),"video 3s plays ÷ impr.")}</div>`}
+const curAds=()=>ads.filter(okAd);
 
 /* ------------------------------------------------------------------ tab: Creatives */
+const adRow=a=>({...a,key:a.id,r:rates(a.m),v:verdict(a.m,a.p.fmt==="Video"),fmt:a.p.fmt,thumb:a.thumb});
 function renderCreatives(){
-  const list=D.creatives.filter(okGroup).map(g=>g),working=list.filter(g=>g.v.k==="win").sort((a,b)=>b.m.spend-a.m.spend),losing=list.filter(g=>g.v.k==="lose").sort((a,b)=>b.m.spend-a.m.spend);
-  const vids=list.filter(g=>g.fmt==="Video"&&g.m.plays3s>0);
-  $("#main").innerHTML=`${kpiRow(ALL,BASE)}
-  <section class="sec"><h2>Creatives</h2><p class="sub">One row per creative: every ad with the same Ad number is combined across ad sets, copies, versions and placements (${ads.length} ads → ${D.creatives.length} creatives). Missed one? Tick the rows and press Merge insights.</p>
-    ${filters()}${mergeBar("cr")}
-    ${table("creatives",list,{select:"cr",open:"cr",lead:leadCreative,leadLabel:"Creative",leadSort:g=>g.name})}</section>
-  <section class="sec"><h2>What's working and what's not</h2><p class="sub">Judged against the account average${T.cpa||T.roas||T.hookRate?" (or the targets set for this client)":""}: ${hasResults?(hasValue?"ROAS":"CPA"):"CTR"} first, then hook rate for video. Creatives with too little spend are marked "Too early".</p>
-    <div class="grid two"><div class="card"><h3 style="color:var(--win)">Working <span class="small">(${working.length})</span></h3>${miniList(working.slice(0,6))}</div>
-    <div class="card"><h3 style="color:var(--lose)">Not working <span class="small">(${losing.length})</span></h3>${miniList(losing.slice(0,6))}</div></div></section>
+  refilter();
+  const list=D.creatives,bySpend=(a,b)=>b.m.spend-a.m.spend;
+  const working=list.filter(g=>g.v.k==="win").sort(bySpend),losing=list.filter(g=>g.v.k==="lose").sort(bySpend),early=list.filter(g=>g.v.k==="early").sort(bySpend);
+  const vids=list.filter(g=>g.fmt==="Video"&&g.m.plays3s>0),vads=curAds().filter(a=>a.p.fmt==="Video"&&a.m.plays3s>0).map(adRow);
+  const retCols=["spend","impr","clicks","cpm","ctr","hook","r25","r50","r75","r95","hold","avgw",hasValue?"roas":"cpa"];
+  const byAd=state.ret==="ad";
+  $("#main").innerHTML=`${kpiRow(agg(curAds()),rates(agg(curAds())))}
+  <section class="sec"><h2>Creatives</h2><p class="sub">One row per <b>creative</b>, not per ad. Ads that share an Ad number, the same video or image, or the same name/hook are combined across ad sets, copies, versions and placements (${ads.length} ads → ${FULL.creatives.length} creatives). Missed one? Tick the rows and press Merge insights.</p>
+    ${filters()}<label class="small" style="display:block;margin:-4px 0 10px"><input type="checkbox" id="smart" ${SMART?"checked":""}> Smart grouping (also join ads that use the same video, image or hook; untick to group by Ad number only)</label>${mergeBar("cr")}
+    ${table("creatives",list,{select:"cr",open:"cr",lead:leadCreative,leadLabel:"Creative",leadSort:g=>g.name,cols:["spend","impr","clicks","cpm","ctr","eng","purch","cpa","roas","rev","aov","cvr","cpc","hook"]})}</section>
+  <section class="sec"><h2>What's working and what's not</h2><p class="sub">Each <b>creative</b> is judged against the definition below. Change the metric or the thresholds and every verdict in the dashboard updates.</p>
+    ${vdefPanel()}
+    <div class="grid three" style="margin-top:12px"><div class="card"><h3 style="color:var(--win)">Working <span class="small">(${working.length})</span></h3>${miniList(working,"win")}</div>
+    <div class="card"><h3 style="color:var(--lose)">Not working <span class="small">(${losing.length})</span></h3>${miniList(losing,"lose")}</div>
+    <div class="card"><h3 style="color:var(--early)">Too early <span class="small">(${early.length})</span></h3>${miniList(early,"early")}</div></div></section>
   <section class="sec"><h2>Video retention</h2><p class="sub">Hook rate = share of impressions that played 3+ seconds. The 25 / 50 / 75 / 95 % columns are the share of those 3-second plays still watching at that point. A strong hook with a steep drop means the opening works but the body doesn't.</p>
-    ${vids.length?table("retention",vids,{open:"cr",lead:leadCreative,leadLabel:"Video creative",leadSort:g=>g.name,cols:["spend","hook","r25","r50","r75","r95","hold","avgw","ctr",hasValue?"roas":"cpa"]}):`<div class="card empty">No video plays in this range.</div>`}</section>`;
+    <div class="ctrl"><div class="seg"><button type="button" data-ret="cr" aria-pressed="${!byAd}">By creative (${vids.length})</button><button type="button" data-ret="ad" aria-pressed="${byAd}">By ad (${vads.length})</button></div></div>
+    ${(byAd?vads:vids).length?(byAd?table("retention-ad",vads,{open:"ad",lead:leadAd,leadLabel:"Video ad",leadSort:a=>a.name,cols:retCols}):table("retention",vids,{open:"cr",lead:leadCreative,leadLabel:"Video creative",leadSort:g=>g.name,cols:retCols})):`<div class="card empty">No video plays in this range.</div>`}</section>`;
   bindFilters(renderCreatives);
 }
 COLS.r25={l:"25%",v:g=>g.m.plays3s?g.r.r25:null,f:v=>pct(v,0),tip:"Share of 3s plays that reached 25% of the video"};
 COLS.r50={l:"50%",v:g=>g.m.plays3s?g.r.r50:null,f:v=>pct(v,0)};COLS.r75={l:"75%",v:g=>g.m.plays3s?g.r.r75:null,f:v=>pct(v,0)};
 COLS.r95={l:"95%",v:g=>g.m.plays3s?g.r.r95:null,f:v=>pct(v,0)};COLS.hold={l:"ThruPlay",v:g=>g.m.plays3s?g.r.hold:null,f:v=>pct(v,0),tip:"ThruPlays ÷ 3-second plays"};
 COLS.avgw={l:"Avg watch",v:g=>g.m.avgWatch||null,f:v=>v?v.toFixed(1)+"s":"–"};
-function miniList(list){
-  if(!list.length)return`<div class="small" style="padding:10px 0">None yet.</div>`;
-  return list.map(g=>`<div class="li" data-open="cr|${esc(g.key)}">${thumbHtml(g)}<div class="tx"><b>${esc(g.name)}</b><span class="small">${esc(g.v.why[0]||"")}</span><div class="small">${money(g.m.spend)} spent · ${num(g.m[RESKEY])} ${RESLBL.toLowerCase()} · ${esc(g.fmt)}</div></div>${chip(g.v)}</div>`).join("");
+function miniList(list,kind){
+  if(!list.length)return`<div class="small" style="padding:10px 0">None.</div>`;
+  const n=state.showAll[kind]?list.length:8;
+  return list.slice(0,n).map(g=>`<div class="li" data-open="cr|${esc(g.key)}">${thumbHtml(g)}<div class="tx"><b>${esc(g.name)}</b><span class="small">${esc(g.v.why[0]||"")}</span><div class="small">${money(g.m.spend)} spent · ${num(g.m[RESKEY])} ${RESLBL.toLowerCase()} · ${g.ads.length} ad${g.ads.length>1?"s":""} · ${esc(g.fmt)}</div></div>${chip(g.v)}</div>`).join("")
+    +(list.length>8?`<p style="margin:8px 0 0"><button class="btn alt" type="button" data-showall="${kind}">${state.showAll[kind]?"Show top 8":"Show all "+list.length}</button></p>`:"");
 }
 
 /* ------------------------------------------------------------------ tab: Ads (ad level) */
 function renderAds(){
-  const list=ads.filter(okAd);
+  refilter();
+  const list=curAds();
   $("#main").innerHTML=`<section class="sec" style="margin-top:0"><h2>Ads</h2><p class="sub">Every ad exactly as it runs in Meta (one row per ad per ad set). Tick ads that belong together and press Merge insights to treat them as one creative.</p>
     ${filters()}${mergeBar("ad")}
-    ${table("ads",list.map(a=>({...a,key:a.id,r:rates(a.m),v:verdict(a.m,a.p.fmt==="Video"),fmt:a.p.fmt,thumb:a.thumb})),{select:"ad",open:"ad",lead:leadAd,leadLabel:"Ad",leadSort:a=>a.name})}</section>`;
+    ${table("ads",list.map(adRow),{select:"ad",open:"ad",lead:leadAd,leadLabel:"Ad",leadSort:a=>a.name,cols:["spend","impr","clicks","cpm","ctr","eng","purch","cpa","roas","rev","aov","cvr","cpc","hook"]})}</section>`;
   bindFilters(renderAds);
 }
 
 /* ------------------------------------------------------------------ tab: Creators */
 function renderCreators(){
-  const cr=D.creators.filter(c=>c.list.some(okGroup)),src=D.sources;
+  refilter();
+  const cr=D.creators,src=D.sources;
   const unnamed=D.creatives.filter(g=>g.p.source==="Creator"&&!g.p.creator);
   const row=s=>{const r=s.r;return`<div class="card"><h3>${esc(s.key)}</h3><div class="small" style="margin-bottom:8px">${s.list.length} creatives · ${s.ads.length} ads · ${pct(div(s.m.spend,ALL.spend),0)} of spend</div><div class="mgrid"><div><span>Spend</span><b>${money(s.m.spend)}</b></div><div><span>${RESLBL}</span><b>${num(s.m[RESKEY])}</b></div><div><span>CPA</span><b>${money(r.cpa)}</b></div><div><span>ROAS</span><b>${x2(r.roas)}</b></div><div><span>CTR</span><b>${pct(r.ctr,2)}</b></div><div><span>Eng. rate</span><b>${pct(r.eng,2)}</b></div></div></div>`};
   $("#main").innerHTML=`<section class="sec" style="margin-top:0"><h2>Creators vs brand</h2><p class="sub">Who is speaking in the ad: a creator (whitelisted / UGC) or the brand itself.</p><div class="grid two">${src.map(row).join("")}</div></section>
@@ -389,21 +505,21 @@ function renderCreators(){
   bindFilters(renderCreators);
 }
 
-/* ------------------------------------------------------------------ tab: Hooks & formats */
+/* ------------------------------------------------------------------ tab: Primary text hooks & formats */
 function renderHooks(){
-  const hooks=D.hooks.filter(h=>h.list.some(okGroup));
-  const small=(id,rows,label)=>table(id,rows,{lead:s=>`<b>${esc(s.key)}</b><div class="small">${s.list.length} creatives</div>`,leadLabel:label,leadSort:s=>s.key,sort:"spend",
-    cols:["spend","clicks","ctr","eng","purch","cpa","roas","aov","cvr","hook"]});
-  $("#main").innerHTML=`<section class="sec" style="margin-top:0"><h2>Hooks</h2><p class="sub">Creatives are grouped by the hook in the ad name (the opening line). Where the name has no hook the first line of the ad copy is used. Hook rate only counts video.</p>
+  refilter();
+  const hooks=D.hooks,hcols=["spend","impr","clicks","cpm","ctr","eng","purch","cpa","roas","aov","cvr","hook"];
+  const small=(id,rows,label)=>table(id,rows,{lead:s=>`<b>${esc(s.key)}</b><div class="small">${s.list.length} creatives</div>`,leadLabel:label,leadSort:s=>s.key,sort:"spend",cols:hcols});
+  $("#main").innerHTML=`<section class="sec" style="margin-top:0"><h2>Primary Text Hooks</h2><p class="sub">Creatives grouped by the <b>opening line of the ad's primary text</b> (the caption above the image or video). This can differ from what the video itself opens with, so it is judged separately. Catalog / dynamic ads have no fixed primary text and sit under one row. "Hook rate" in the last column is the video's own 3-second hook, shown for comparison.</p>
     ${filters()}
-    ${table("hooks",hooks,{lead:s=>`<b>${esc(s.label)}</b><div class="small">${s.list.length} creatives · ${s.ads.length} ads</div>`,leadLabel:"Hook",leadSort:s=>s.label,cols:["spend","clicks","ctr","eng","purch","cpa","roas","aov","cvr","hook"]})}</section>
-  <section class="sec"><h2>By format</h2>${small("fmts",D.fmts,"Format")}</section>
+    ${table("hooks",hooks,{lead:s=>`<b>${esc(s.label)}</b><div class="small">${s.list.length} creatives · ${s.ads.length} ads</div>`,leadLabel:"Primary text hook",leadSort:s=>s.label,cols:hcols})}</section>
+  <section class="sec"><h2>Format comparison</h2>${small("fmts",D.fmts,"Format")}</section>
   <section class="sec"><h2>By SKU</h2><p class="sub">SKU is read from the ad name (${Object.values(SKUS).join(", ")}).</p>${small("skus",D.skus,"SKU")}</section>`;
   bindFilters(renderHooks);
 }
 
 /* ------------------------------------------------------------------ tab: Black Friday */
-function renderBF(){
+function renderBF(){refilter();
   const bf=D.creatives.filter(g=>g.bf),nb=D.creatives.filter(g=>!g.bf);
   if(!bf.length){$("#main").innerHTML=`<div class="card empty"><h3>No Black Friday ads found</h3><p>An ad counts as Black Friday when its <b>name</b> contains "BlackFriday" or "BF" (for example <span class="mono">Ad701_Static_Brand_Baby_BF_Bundle_V1</span>). None of the ${ads.length} ads in this range do yet.</p></div>`;return}
   const bAds=bf.flatMap(g=>g.ads),nAds=nb.flatMap(g=>g.ads),bm=agg(bAds),nm=agg(nAds),br=rates(bm),nr=rates(nm);
@@ -430,14 +546,68 @@ function renderBF(){
     ${table("bf",bf,{open:"cr",lead:leadCreative,leadLabel:"Creative",leadSort:g=>g.name,verdict:true,extra:[{k:"vsn",l:"vs normal",h:g=>`<span class="chip v-${g.v2.k}">${g.v2.label}</span>`}]})}</section>`;
 }
 
-/* ------------------------------------------------------------------ tab: Campaigns */
+/* ------------------------------------------------------------------ tab: Campaigns / Ad sets / Ads / Creatives */
 function renderCampaigns(){
-  const rows=groupBy(ads,a=>a.campaign,(c,l)=>{const m=agg(l);return{key:c,ads:l,m,r:rates(m),v:verdict(m,false)}});
+  refilter();
+  const cur=curAds(),lv=state.level;
+  const statusCell=s=>{const act=s.ads.filter(a=>a.active).length,tot=s.ads.length,by={};s.ads.forEach(a=>by[a.status]=(by[a.status]||0)+1);
+    const top=Object.entries(by).sort((a,b)=>b[1]-a[1]).map(([k,n])=>statusLbl(k)+" "+n).join(", ");
+    return`<span class="chip ${act?"v-win":"v-early"}" title="${esc(top)}">${act?act+" of "+tot+" active":"Not active"}</span>`};
+  const mk=(k,l)=>{const m=agg(l);return{key:k,ads:l,m,r:rates(m),v:verdict(m,l.every(a=>a.p.fmt==="Video"))}};
+  const cols=["spend","impr","clicks","cpm","ctr","eng","purch","cpa","roas","rev","aov","cvr","cpc"];
+  const extra=[{k:"st",l:"Status",h:statusCell}];
+  const levels=[["camp","Campaigns"],["adset","Ad sets"],["ad","Ads"],["cr","Creatives"]];
+  let tbl;
+  if(lv==="camp"){const rows=groupBy(cur,a=>a.campaign,mk);
+    tbl=table("camps",rows,{lead:s=>`<b>${esc(s.key)}</b><div class="small">${new Set(s.ads.map(a=>a.adset)).size} ad sets · ${s.ads.length} ads${s.ads[0].objective?" · "+esc(s.ads[0].objective.replace(/^OUTCOME_/,"").toLowerCase()):""}</div>`,leadLabel:"Campaign",leadSort:s=>s.key,extra,cols})}
+  else if(lv==="adset"){const rows=groupBy(cur,a=>(a.adsetId||a.adset)+"|"+a.campaign,(k,l)=>({...mk(k,l),adset:l[0].adset,campaign:l[0].campaign}));
+    tbl=table("adsets",rows,{lead:s=>`<b>${esc(s.adset)}</b><div class="small">${esc(s.campaign)} · ${s.ads.length} ads</div>`,leadLabel:"Ad set",leadSort:s=>s.adset,extra,cols})}
+  else if(lv==="ad")tbl=table("ads2",cur.map(adRow),{open:"ad",lead:leadAd,leadLabel:"Ad",leadSort:a=>a.name,cols});
+  else tbl=table("creatives2",D.creatives,{open:"cr",lead:leadCreative,leadLabel:"Creative",leadSort:g=>g.name,cols});
   const d=DATA.daily||[],maxS=Math.max(...d.map(x=>x.spend),1),W=640,H=120;
   const pts=d.map((x,i)=>[d.length>1?i/(d.length-1)*(W-20)+10:W/2,H-18-(x.spend/maxS)*(H-34)]);
-  $("#main").innerHTML=`${kpiRow(ALL,BASE)}
-  ${d.length>1?`<section class="sec"><h2>Daily spend</h2><div class="card"><svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Daily spend"><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="${pts.map(p=>p.join(",")).join(" ")}"/><text x="10" y="12">${money(maxS)}</text><text x="10" y="${H-4}">${esc(d[0].date)}</text><text x="${W-10}" y="${H-4}" text-anchor="end">${esc(d[d.length-1].date)}</text></svg></div></section>`:""}
-  <section class="sec"><h2>Campaigns</h2>${table("camps",rows,{lead:s=>`<b>${esc(s.key)}</b><div class="small">${s.ads.length} ads</div>`,leadLabel:"Campaign",leadSort:s=>s.key,verdict:false,cols:["spend","impr","clicks","ctr","eng","purch","cpa","roas","rev","aov","cvr","cpc","cpm"]})}</section>`;
+  $("#main").innerHTML=`${kpiRow(agg(cur),rates(agg(cur)))}
+  ${d.length>1?`<section class="sec"><h2>Daily spend <span class="small">whole account</span></h2><div class="card"><svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Daily spend"><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="${pts.map(p=>p.join(",")).join(" ")}"/><text x="10" y="12">${money(maxS)}</text><text x="10" y="${H-4}">${esc(d[0].date)}</text><text x="${W-10}" y="${H-4}" text-anchor="end">${esc(d[d.length-1].date)}</text></svg></div></section>`:""}
+  <section class="sec"><h2>Performance by level</h2><p class="sub">Pick the level to report on, then narrow it with the status, campaign and ad set filters.</p>
+    <div class="ctrl"><div class="seg">${levels.map(([k,l])=>`<button type="button" data-level="${k}" aria-pressed="${lv===k}">${l}</button>`).join("")}</div></div>
+    ${filters()}${tbl}</section>`;
+  bindFilters(renderCampaigns);
+}
+
+/* ------------------------------------------------------------------ tab: Previews (real Meta previews) */
+const PV_FORMATS=[["MOBILE_FEED_STANDARD","Facebook mobile feed"],["DESKTOP_FEED_STANDARD","Facebook desktop feed"],["INSTAGRAM_STANDARD","Instagram feed"],["INSTAGRAM_STORY","Instagram story"],["INSTAGRAM_REELS","Instagram reels"],["FACEBOOK_REELS_MOBILE","Facebook reels"]];
+const pvCache={};
+function loadPreview(box,adId,fmt){
+  const key=adId+"|"+fmt,done=r=>{const old=box.querySelector(".pvmsg");old&&old.remove();
+    const img=box.querySelector(":scope>img");if(img)img.remove();const prev=box.querySelector("iframe");prev&&prev.remove();
+    const w=r.width||340,h=r.height||600,avail=box.clientWidth||w,sc=Math.min(1,avail/w);
+    box.style.display="block";box.style.height=Math.round(h*sc)+"px";
+    box.insertAdjacentHTML("beforeend",`<iframe src="${esc(r.src)}" title="Meta ad preview" scrolling="no" style="width:${w}px;height:${h}px;transform:scale(${sc});transform-origin:top left;margin-left:${Math.max(0,Math.round((avail-w*sc)/2))}px"></iframe>`)};
+  if(pvCache[key])return done(pvCache[key]);
+  fetch("api/preview?ad="+encodeURIComponent(adId)+"&format="+encodeURIComponent(fmt),{cache:"no-store"}).then(r=>r.json().then(j=>r.ok?j:Promise.reject(j.error||"No preview")))
+    .then(j=>{pvCache[key]=j;done(j)}).catch(err=>{const m=box.querySelector(".pvmsg");if(m)m.textContent="Meta's live preview isn't available for this ad ("+(typeof err==="string"?err.slice(0,120):"request failed")+"). Showing the creative image instead."});
+}
+let pvObserver=null;
+function watchPreviews(){
+  if(pvObserver)pvObserver.disconnect();
+  if(!("IntersectionObserver" in window)){document.querySelectorAll(".pv[data-ad]").forEach(b=>loadPreview(b,b.dataset.ad,state.pvfmt));return}
+  pvObserver=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){pvObserver.unobserve(e.target);loadPreview(e.target,e.target.dataset.ad,state.pvfmt)}}),{rootMargin:"300px"});
+  document.querySelectorAll(".pv[data-ad]").forEach(b=>pvObserver.observe(b));
+}
+function renderPreviews(){
+  refilter();
+  const list=D.creatives.slice().sort((a,b)=>b.m.spend-a.m.spend),n=state.pvN;
+  const fb=DATA.sample;
+  $("#main").innerHTML=`<section class="sec" style="margin-top:0"><h2>Ad previews</h2><p class="sub">Each creative as Meta itself renders it (the same preview you get in Ads Manager), loaded as you scroll. The still image is shown while it loads, or if Meta can't render a preview for that ad. Each card previews the creative's top-spending ad.</p>
+    ${filters()}
+    <div class="ctrl"><label class="small">Placement <select id="pvfmt">${PV_FORMATS.map(([v,l])=>`<option value="${v}" ${state.pvfmt===v?"selected":""}>${l}</option>`).join("")}</select></label><span class="small">${list.length} creatives</span></div>
+    <div class="pgrid">${list.slice(0,n).map(g=>`<div class="card"><div class="row" style="justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div style="min-width:0"><b>${esc(g.name)}</b><div class="small">${money(g.m.spend)} · ${num(g.m[RESKEY])} ${RESLBL.toLowerCase()} · ${g.ads.length} ad${g.ads.length>1?"s":""}</div></div>${chip(g.v)}</div>
+      <div class="pv" ${fb?"":`data-ad="${esc(g.rep.id)}"`}>${g.thumb?`<img src="${esc(g.thumb)}" alt="${esc(g.name)}" loading="lazy">`:`<span class="small">${g.fmt==="Catalog"?"Catalog ad":"No image saved"}</span>`}${fb?"":`<div class="pvmsg">Loading Meta preview…</div>`}</div>
+      <p class="small" style="margin:8px 0 0"><a href="#cr-${encodeURIComponent(g.key)}" data-open="cr|${esc(g.key)}">Details</a>${g.rep.previewLink?` · <a href="${esc(g.rep.previewLink)}" target="_blank" rel="noopener">Open Meta preview link</a>`:""}${g.thumb?` · <a href="${esc(g.thumb)}" target="_blank" rel="noopener">Full-size image</a>`:""}</p></div>`).join("")}</div>
+    ${list.length>n?`<p style="margin-top:12px"><button class="btn alt" type="button" data-pvmore>Show more (${list.length-n} left)</button></p>`:""}</section>`;
+  bindFilters(renderPreviews);
+  const s=$("#pvfmt");s&&(s.onchange=e=>{state.pvfmt=e.target.value;store.set("pvfmt",state.pvfmt);renderPreviews()});
+  watchPreviews();
 }
 
 /* ------------------------------------------------------------------ detail drawer (ad or creative) */
@@ -453,32 +623,35 @@ const cta=c=>c in CTAS?CTAS[c]:String(c||"").toLowerCase().replace(/_/g," ").rep
 const dyn=t=>esc(t).replace(/\{\{\s*product\.(\w+)\s*\}\}/g,(_,f)=>`<span class="dyn">Product ${esc(f)}</span>`);
 const isDyn=a=>/\{\{[^}]*\}\}/.test((a.body||"")+(a.title||""))||a.p.fmt==="Catalog";
 function mock(a){
-  const page=(DATA.account&&DATA.account.name)||DATA.client,host=(a.url||DATA.domain||"").replace(/^https?:\/\//,"").split("/")[0];
-  return`<div class="fb"><div class="h"><div class="av">${esc((page||"?")[0])}</div><div><b>${esc(page)}</b><div class="small">Sponsored</div></div></div>
-    <div class="pt">${dyn(a.body||"")}</div>
-    <div class="md">${a.thumb?`<img src="${esc(a.thumb)}" alt="">`:`<span>${a.p.fmt==="Video"?"▶ video (no thumbnail)":a.p.fmt==="Catalog"?"Catalog ad: product images come from your feed":"no image"}</span>`}</div>
-    <div class="ct"><div style="min-width:0"><span class="u">${esc(host)}</span><b>${dyn(a.title||"")}</b><span class="small">${dyn(a.description||"")}</span></div>${cta(a.cta)?`<span class="btn2">${esc(cta(a.cta))}</span>`:""}</div></div>
-    ${isDyn(a)?`<p class="small">Catalog / dynamic ad: Meta fills the highlighted fields and the images from the product feed for each viewer, so what people see varies. Use "Live Meta preview" below for Meta's own render.</p>`:""}`;
+  const host=(a.url||DATA.domain||"").replace(/^https?:\/\//,"").split("/")[0];
+  const img=a.thumb?`<a href="${esc(a.thumb)}" target="_blank" rel="noopener" title="Open full-size image"><img class="hero" src="${esc(a.thumb)}" alt="Creative image" loading="lazy"></a>`
+    :`<div class="note">${a.p.fmt==="Video"?"No video thumbnail could be saved.":a.p.fmt==="Catalog"?"Catalog ad: Meta builds the images from your product feed for each viewer.":"No image could be saved."} See the Meta preview above.</div>`;
+  const text=(a.body||"").trim();
+  return`<div class="card"><h3 style="margin-bottom:8px">Creative</h3>${img}
+    ${text?`<p class="ptext">${dyn(text)}</p>`:""}
+    <div class="kv">${a.title?`<div><span class="small">Headline</span> <b>${dyn(a.title)}</b></div>`:""}${a.description?`<div><span class="small">Description</span> ${dyn(a.description)}</div>`:""}${cta(a.cta)?`<div><span class="small">Button</span> <b>${esc(cta(a.cta))}</b></div>`:""}${host?`<div><span class="small">Link</span> ${esc(host)}</div>`:""}</div>
+    ${isDyn(a)?`<p class="small" style="margin:8px 0 0">Catalog / dynamic ad: highlighted fields are filled by Meta per viewer from the product feed, so what people see varies.</p>`:""}</div>`;
 }
 function metricsGrid(m){const r=rates(m);return`<div class="mgrid"><div><span>Spend</span><b>${money(m.spend)}</b></div><div><span>Impressions</span><b>${num(m.impr)}</b></div><div><span>Clicks</span><b>${num(m.linkClicks||m.clicks)}</b></div><div><span>CTR</span><b>${pct(r.ctr,2)}</b></div><div><span>Eng. rate</span><b>${pct(r.eng,2)}</b></div><div><span>${RESLBL}</span><b>${num(m[RESKEY])}</b></div><div><span>CPA</span><b>${money(r.cpa)}</b></div><div><span>ROAS</span><b>${x2(r.roas)}</b></div><div><span>Revenue</span><b>${money(m.value)}</b></div><div><span>AOV</span><b>${money(r.aov)}</b></div><div><span>CVR</span><b>${pct(r.cvr,1)}</b></div><div><span>CPC</span><b>${money(r.cpc)}</b></div></div>`}
 function openDrawer(kind,id){
   state.open={kind,id};const dr=$("#drawer");
   let g,a,title,sub,m,v,cmtKey;
-  if(kind==="cr"){g=D.byKey[id];if(!g)return;a=g.rep;title=g.name;m=g.m;v=g.v;cmtKey="c:"+g.key;
+  if(kind==="cr"){g=FULL.byKey[id];if(!g)return;a=g.rep;title=g.name;m=g.m;v=g.v;cmtKey="c:"+g.key;
     sub=`${g.p.num?"Ad"+g.p.num+" · ":""}${g.ads.length} ad${g.ads.length>1?"s":""} in ${g.adsets} ad set${g.adsets>1?"s":""}`}
-  else{a=D.adById[id];if(!a)return;title=a.name;m=a.m;v=verdict(a.m,a.p.fmt==="Video");cmtKey=a.id;sub=a.campaign+" › "+a.adset}
+  else{a=FULL.adById[id];if(!a)return;title=a.name;m=a.m;v=verdict(a.m,a.p.fmt==="Video");cmtKey=a.id;sub=a.campaign+" › "+a.adset}
   const members=kind==="cr"&&g.ads.length>1?`<div class="card"><h3 style="margin-bottom:6px">Ads in this creative</h3><div class="tscroll" style="max-height:260px"><table><thead><tr><th class="nosort">Ad</th><th class="nosort">Spend</th><th class="nosort">${RESLBL}</th><th class="nosort">ROAS</th></tr></thead><tbody>${g.ads.slice().sort((x,y)=>y.m.spend-x.m.spend).map(x=>{const r=rates(x.m);return`<tr data-open="ad|${esc(x.id)}"><td class="lead"><b>${esc(x.name)}</b><div class="small">${esc(x.campaign)} › ${esc(x.adset)}</div></td><td>${money(x.m.spend)}</td><td>${num(x.m[RESKEY])}</td><td>${x2(r.roas)}</td></tr>`}).join("")}</tbody></table></div>${g.manual?`<p style="margin:8px 0 0"><button class="btn alt" data-unmerge="${esc(g.key.slice(2))}">Unmerge these ads</button></p>`:""}</div>`:"";
   dr.innerHTML=`<button class="btn alt x" data-close type="button">Close ✕</button>
     <div class="grid" style="gap:12px;clear:both">
     <div class="card"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><div><h3>${esc(title)}</h3><div class="small">${esc(sub)}</div><div style="margin-top:4px">${tags(a.p)}${(kind==="cr"?g.bf:a.p.bf)?'<span class="chip v-bf">Black Friday</span>':""}</div></div>${chip(v)}</div><p class="small" style="margin:8px 0 0">${v.why.map(esc).join(" · ")}</p></div>
+ <div class="card"><h3 style="margin-bottom:8px">Meta preview <span class="small">as Meta renders it</span></h3><div class="ctrl" style="margin-top:0"><select id="pfmt" aria-label="Placement">${PV_FORMATS.map(([v,l])=>`<option value="${v}" ${state.pvfmt===v?"selected":""}>${l}</option>`).join("")}</select></div><div id="pbox" class="pv" data-drawer="1" data-ad="${esc(a.id)}">${a.thumb?`<img src="${esc(a.thumb)}" alt="">`:""}<div class="pvmsg">Loading Meta preview…</div></div></div>
     ${mock(a)}
     <div class="card"><h3 style="margin-bottom:8px">Performance <span class="small">${esc(DATA.dateRange)}</span></h3>${metricsGrid(m)}</div>
     ${m.plays3s?`<div class="card"><h3 style="margin-bottom:8px">Video retention${a.videoLength?` <span class="small">${a.videoLength}s video</span>`:""}</h3>${funnel(m)}</div>`:""}
     ${members}
-    <div class="card"><h3 style="margin-bottom:8px">Live Meta preview</h3><div class="ctrl" style="margin-top:0"><select id="pfmt"><option value="MOBILE_FEED_STANDARD">Facebook mobile feed</option><option value="DESKTOP_FEED_STANDARD">Facebook desktop feed</option><option value="INSTAGRAM_STANDARD">Instagram feed</option><option value="INSTAGRAM_STORY">Instagram story</option><option value="INSTAGRAM_REELS">Instagram reels</option></select><button class="btn" id="pload" data-ad="${esc(a.id)}" type="button">Load preview</button></div><div id="pbox" class="small">Meta renders this live, including catalog ads. ${a.previewLink?`<a href="${esc(a.previewLink)}" target="_blank" rel="noopener">Open shareable preview link</a>`:""}</div>
-      <p class="small" style="margin:8px 0 0">${[a.permalink?`<a href="${esc(a.permalink)}" target="_blank" rel="noopener">View post</a>`:"",a.url?`<a href="${esc(a.url)}" target="_blank" rel="noopener">Landing page</a>`:""].filter(Boolean).join(" · ")}</p></div>
+    <div class="card"><h3 style="margin-bottom:6px">Links</h3><p class="small" style="margin:0">${[a.previewLink?`<a href="${esc(a.previewLink)}" target="_blank" rel="noopener">Open Meta shareable preview</a>`:"",a.permalink?`<a href="${esc(a.permalink)}" target="_blank" rel="noopener">View post</a>`:"",a.url?`<a href="${esc(a.url)}" target="_blank" rel="noopener">Landing page</a>`:"",a.thumb?`<a href="${esc(a.thumb)}" target="_blank" rel="noopener">Full-size image</a>`:""].filter(Boolean).join(" · ")||"No links available."}</p></div>
     <section class="card" id="cbox" hidden></section></div>`;
   dr.classList.add("open");dr.scrollTop=0;loadComments(cmtKey);
+  const pb=$("#pbox");if(pb&&!DATA.sample)loadPreview(pb,a.id,$("#pfmt").value);else if(pb){const mm=pb.querySelector(".pvmsg");mm&&mm.remove()}
   try{history.replaceState(null,"","#"+kind+"-"+encodeURIComponent(id))}catch(e){}
 }
 function closeDrawer(){state.open=null;$("#drawer").classList.remove("open");try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}}
@@ -523,7 +696,7 @@ function saveMerges(){
 }
 function doMerge(kind){
   const set=kind==="ad"?selAd:selCr,ids=new Set();
-  if(kind==="ad")set.forEach(id=>ids.add(id));else set.forEach(k=>D.byKey[k]&&D.byKey[k].ads.forEach(a=>ids.add(a.id)));
+  if(kind==="ad")set.forEach(id=>ids.add(id));else set.forEach(k=>FULL.byKey[k]&&FULL.byKey[k].ads.forEach(a=>ids.add(a.id)));
   const nm=($("#mergeName")&&$("#mergeName").value.trim())||"Merged creative";
   merges=merges.filter(g=>{if(g.ads.some(x=>ids.has(x))){g.ads.forEach(x=>ids.add(x));return false}return true});
   merges.push({id:"g"+Date.now().toString(36),name:nm,ads:[...ids]});
@@ -542,23 +715,32 @@ document.addEventListener("click",e=>{
   const so=t.closest("[data-sort]");if(so){const [id,k]=so.dataset.sort.split("|"),st=sorts[id]||(sorts[id]={k,asc:false});if(st.k===k)st.asc=!st.asc;else{st.k=k;st.asc=(k==="lead"||(COLS[k]&&COLS[k].low))}render();return}
   const fm=t.closest("[data-fmt]");if(fm){state.fmt=fm.dataset.fmt;render();return}
   const ce=t.closest("[data-creator]");if(ce&&!t.closest("[data-open]")){const k=ce.dataset.creator;state.openCreators.has(k)?state.openCreators.delete(k):state.openCreators.add(k);render();return}
-  const pl=t.closest("#pload");if(pl){const box=$("#pbox");box.textContent="Asking Meta for the preview…";
-    fetch("api/preview?ad="+encodeURIComponent(pl.dataset.ad)+"&format="+encodeURIComponent($("#pfmt").value),{cache:"no-store"}).then(r=>r.json().then(j=>r.ok?j:Promise.reject(j.error||"No preview")))
-      .then(j=>{box.innerHTML=`<iframe class="live" src="${esc(j.src)}" title="Meta ad preview" loading="lazy"></iframe>`}).catch(err=>{box.textContent="Couldn't load the preview: "+(typeof err==="string"?err:"request failed")});return}
+  const rt=t.closest("[data-ret]");if(rt){state.ret=rt.dataset.ret;store.set("ret",state.ret);render();return}
+  const lv=t.closest("[data-level]");if(lv){state.level=lv.dataset.level;store.set("level",state.level);render();return}
+  const sa=t.closest("[data-showall]");if(sa){const k=sa.dataset.showall;state.showAll[k]=!state.showAll[k];render();return}
+  if(t.closest("[data-pvmore]")){state.pvN+=12;render();return}
+  if(t.closest("[data-vreset]")){V={...VDEF0};store.set("vdef",V);rebuild();render();return}
   const op=t.closest("[data-open]");if(op&&!t.closest("input,a,button")){const [k,id]=op.dataset.open.split("|");openDrawer(k,id)}
+});
+document.addEventListener("change",e=>{
+  const t=e.target;if(t.id==="smart"){SMART=t.checked;store.set("smart",SMART);selCr.clear();rebuild();render();return}
+  if(t.id==="pfmt"&&t.closest("#drawer")){state.pvfmt=t.value;store.set("pvfmt",t.value);const b=$("#pbox");if(b&&state.open){const a=state.open.kind==="ad"?FULL.adById[state.open.id]:(FULL.byKey[state.open.id]||{}).rep;if(a&&!DATA.sample)loadPreview(b,a.id,t.value)}return}
+  const k=t.dataset&&t.dataset.v;if(!k)return;
+  V[k]=t.type==="checkbox"?t.checked:(t.type==="number"&&k!=="custom"?Math.max(0,parseFloat(t.value)||0):t.value);
+  store.set("vdef",V);rebuild();render();
 });
 $("#theme").addEventListener("click",()=>{const d=document.documentElement,cur=d.dataset.theme||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");d.dataset.theme=cur==="dark"?"light":"dark";store.set("theme",d.dataset.theme)});
 {const th=store.get("theme",null);if(th)document.documentElement.dataset.theme=th}
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&state.open)closeDrawer()});
 
 /* ------------------------------------------------------------------ boot */
-const TABS=[["creatives","Creatives"],["ads","Ads"],["creators","Creators"],["hooks","Hooks & formats"],["bf","Black Friday"],["campaigns","Campaigns"]];
+const TABS=[["creatives","Creatives"],["ads","Ads"],["previews","Ad previews"],["creators","Creators"],["hooks","Primary text hooks"],["bf","Black Friday"],["campaigns","Campaigns & ad sets"]];
 function render(){
   const acc=DATA.account||{};
   $("#meta").innerHTML=[DATA.sample?'<span class="badge-sample">SAMPLE DATA, not real results</span>':"",`<span>Account <b>${esc(acc.name||acc.id||"")}</b></span>`,`<span>Range <b>${esc(DATA.dateRange)}</b></span>`,
-    `<span>${ads.length} ads → ${D.creatives.length} creatives</span>`,`<span>Pulled ${esc(DATA.pulledAt.replace("T"," ").slice(0,16))}</span>`].filter(Boolean).join("");
+    `<span>${ads.length} ads → ${FULL.creatives.length} creatives</span>`,`<span>Pulled ${esc(DATA.pulledAt.replace("T"," ").slice(0,16))}</span>`].filter(Boolean).join("");
   $("#tabs").innerHTML=TABS.map(([k,l])=>`<button class="tab ${k==="bf"?"bf":""}" role="tab" data-tab="${k}" aria-selected="${state.tab===k}">${l}</button>`).join("");
-  ({creatives:renderCreatives,ads:renderAds,creators:renderCreators,hooks:renderHooks,bf:renderBF,campaigns:renderCampaigns}[state.tab]||renderCreatives)();
+  ({creatives:renderCreatives,ads:renderAds,previews:renderPreviews,creators:renderCreators,hooks:renderHooks,bf:renderBF,campaigns:renderCampaigns}[state.tab]||renderCreatives)();
 }
 if(!ads.length)$("#main").innerHTML=`<div class="card empty">No ads were returned for this account in the selected range.</div>`;
 else loadMerges(()=>{rebuild();render();const m=location.hash.match(/^#(cr|ad)-(.+)$/);if(m)openDrawer(m[1],decodeURIComponent(m[2]))});

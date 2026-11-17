@@ -16,7 +16,7 @@ from PIL import Image
 import meta_api
 
 ROOT = Path(__file__).parent
-THUMB_PX = 720
+THUMB_PX = 1080
 
 
 def _download(url):
@@ -39,7 +39,7 @@ def save_thumb(url, folder):
             im.thumbnail((THUMB_PX, THUMB_PX))
             im = im.convert("RGB")
             buf = io.BytesIO()
-            im.save(buf, "WEBP", quality=80, method=4)
+            im.save(buf, "WEBP", quality=88, method=4)
             target.write_bytes(buf.getvalue())
             return f"assets/{target.name}"
         except Exception:

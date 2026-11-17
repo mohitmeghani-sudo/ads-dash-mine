@@ -418,13 +418,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         ad, fmt = q.get("ad", [""])[0], q.get("format", ["MOBILE_FEED_STANDARD"])[0]
         hit = _preview_cache.get((ad, fmt))
         if hit and time.time() - hit[0] < 1200:
-            return self._json(200, {"src": hit[1]})
+            return self._json(200, hit[1])
         try:
-            src = meta_api.preview_src(ad, fmt)
+            res = meta_api.preview_src(ad, fmt)  # {"src", "width", "height"}
         except Exception as e:  # Meta's message is useful to the user ("no preview for this format")
             return self._json(502, {"error": str(e)[:300]})
-        _preview_cache[(ad, fmt)] = (time.time(), src)
-        self._json(200, {"src": src})
+        _preview_cache[(ad, fmt)] = (time.time(), res)
+        self._json(200, res)
 
     def _delete_comments(self):
         try:

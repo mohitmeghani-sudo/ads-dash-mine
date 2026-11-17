@@ -26,7 +26,7 @@ ROOT = Path(__file__).parent
 VERSION = os.environ.get("META_API_VERSION", "v23.0")
 GRAPH = f"https://graph.facebook.com/{VERSION}"
 DATE_PRESET = "last_30d"
-CACHE_VERSION = 2
+CACHE_VERSION = 3
 CACHE_HOURS = float(os.environ.get("META_CACHE_HOURS", "3"))
 _VOLUME = os.environ.get("RAILWAY_VOLUME_MOUNT_PATH")
 CACHE_DIR = Path(os.environ.get("META_CACHE_DIR") or (Path(_VOLUME) / "meta_cache" if _VOLUME else ROOT / "cache"))
@@ -200,27 +200,34 @@ def creative_fields(cr):
         fmt = "Dynamic"
     else:
         fmt = "Image"
-    return {"body": body, "title": title, "description": desc, "cta": cta, "url": url, "videoId": video_id,
+    image_hash = link.get("image_hash") or photo.get("image_hash") or ((feed.get("images") or [{}])[0].get("hash")) or ""
+    return {"body": body, "title": title, "description": desc, "cta": cta, "url": url, "videoId": video_id, "imageHash": image_hash,
             "format": fmt, "cards": carousel, "variants": {"bodies": bodies, "titles": titles}}
 
 
 def video_info(api, video_ids):
-    """video id -> {length, thumb, permalink}; batched so a big account costs a handful of calls."""
+    """video id -> {length, thumb, permalink}; batched so a big account costs a handful of calls.
+    `thumb` is the largest thumbnail Meta has: the plain `picture` field is only ~160px, which is what made previews blurry."""
     out, ids = {}, sorted(set(i for i in video_ids if i))
     for i in range(0, len(ids), 40):
         chunk = ids[i:i + 40]
-        try:
-            res = api.get("", {"ids": ",".join(chunk), "fields": "length,picture,permalink_url,title"})
-        except RuntimeError as e:
-            print(f"! video details skipped for {len(chunk)} videos ({e})")
-            continue
-        for vid, v in res.items():
-            out[vid] = {"length": _n(v.get("length")), "thumb": v.get("picture") or "",
+        res = None
+        for fields in ("length,picture,permalink_url,title,thumbnails{uri,width,height,is_preferred}",
+                       "length,picture,permalink_url,title"):
+            try:
+                res = api.get("", {"ids": ",".join(chunk), "fields": fields})
+                break
+            except RuntimeError as e:
+                print(f"! video details skipped for {len(chunk)} videos ({e})")
+        for vid, v in (res or {}).items():
+            thumbs = ((v.get("thumbnails") or {}).get("data")) or []
+            best = max(thumbs, key=lambda t: (_n(t.get("width")) * _n(t.get("height")), bool(t.get("is_preferred"))), default=None)
+            out[vid] = {"length": _n(v.get("length")), "thumb": (best or {}).get("uri") or v.get("picture") or "",
                         "permalink": v.get("permalink_url") or ""}
     return out
 
 
-def creative_thumbs(api, creative_ids, px=720):
+def creative_thumbs(api, creative_ids, px=1080):
     """creative id -> a sharper thumbnail. The default thumbnail_url is ~64px, which is why catalog ads looked blurry."""
     out, ids = {}, sorted(set(i for i in creative_ids if i))
     for i in range(0, len(ids), 40):
@@ -254,12 +261,13 @@ def preview_src(ad_id, ad_format):
     res = Api(creds["token"]).get(f"{ad_id}/previews", {"ad_format": ad_format})
     body = ((res.get("data") or [{}])[0]).get("body", "")
     m = re.search(r'src="([^"]+)"', body)
+    w, h = re.search(r'width="(\d+)"', body), re.search(r'height="(\d+)"', body)
     if not m:
         raise RuntimeError("Meta returned no preview for this ad format")
     src = m.group(1).replace("&amp;", "&")
     if not src.startswith("https://"):
         raise RuntimeError("Unexpected preview address")
-    return src
+    return {"src": src, "width": int(w.group(1)) if w else 0, "height": int(h.group(1)) if h else 0}
 
 
 def pull(client):
@@ -272,7 +280,9 @@ def pull(client):
     info = api.get(account, {"fields": "name,currency,timezone_name,account_status"})
     ads = api.pages(f"{account}/ads", {"fields": AD_FIELDS, "limit": 100,
                                        "effective_status": json.dumps(["ACTIVE", "PAUSED", "ADSET_PAUSED",
-                                                                       "CAMPAIGN_PAUSED", "ARCHIVED", "WITH_ISSUES"])})
+                                                                       "CAMPAIGN_PAUSED", "ARCHIVED", "WITH_ISSUES",
+                                                                       "DISAPPROVED", "PENDING_REVIEW", "IN_PROCESS",
+                                                                       "PREAPPROVED", "PENDING_BILLING_INFO"])})
     ins = api.pages(f"{account}/insights", {"level": "ad", "date_preset": DATE_PRESET, "fields": INSIGHT_FIELDS,
                                             "limit": 200})
     by_ad = {r["ad_id"]: parse_insights(r, result_kind) for r in ins if r.get("ad_id")}
@@ -347,6 +357,9 @@ SAMPLE_NAMES = [  # realistic naming so the grouping rules can be tested; the sa
     "Ad560_Static_Brand_LongTerm_Eczema-isnt-forever_V1_Square", "Ad634_Static_Brand_All_Luxe-blogger-advertorial_V1",
     "Ad701_Static_Brand_Baby_BF_Black-Friday-Bundle_V1", "Ad702_Video_Whitelisted_Baby_@sheyanne_BF_Black-Friday-Deal-Is-Live_V1",
     "Ad703_Static_Brand_All_BlackFriday_50-off-bundle_V2_Vertical", "Ad704_Catalog_Brand_Baby_BF_Sale_V1_Carousel",
+    # one creative that was uploaded three times under different ad numbers (same video): must show as ONE creative
+    "Ad810_Video_Whitelisted_Baby_@sheyanne_Finally-a-solution-to-my-baby_V1", "Ad811_Video_Whitelisted_Baby_@sheyanne_Finally-a-solution-to-my-baby_V2",
+    "Ad812_Video_Whitelisted_Baby_@sheyanne_Finally-a-solution-to-my-baby_V1_Story",
 ]
 
 
@@ -372,9 +385,11 @@ def sample(client):
                 "status": "ACTIVE" if n % 5 else "PAUSED", "created": "2026-10-01T10:00:00+0000",
                 "campaignId": "c1", "campaign": "SAMPLE-Sales-Prospecting" if copy != 2 else "SAMPLE-Sales-Retargeting",
                 "objective": "OUTCOME_SALES", "adsetId": f"as{copy}", "adset": f"SAMPLE Ad set {copy + 1}",
-                "body": "{{product.name}}\n\n{{product.description}}" if catalog else "I almost gave up on my baby's eczema.\nThen I found this.",
+                "body": "{{product.name}}\n\n{{product.description}}" if catalog else (
+                    "Finally a solution to my baby's eczema.\nHere's what worked." if "Finally" in name
+                    else f"{name.split('_')[-2 if name.split('_')[-1].startswith('V') else -1].replace('-', ' ')}.\nThen I found this."),
                 "title": "" if catalog else "Shop now", "description": "", "cta": "SHOP_NOW", "url": "https://soteriskin.com",
-                "videoId": f"v{n}" if video else "", "format": "Video" if video else ("Carousel" if catalog else "Image"), "cards": 0,
+                "videoId": ("vFINALLY" if "Finally" in name else f"v{n}") if video else "", "imageHash": "", "format": "Video" if video else ("Carousel" if catalog else "Image"), "cards": 0,
                 "variants": {"bodies": [], "titles": []}, "videoLength": rnd.choice([22, 31, 41]) if video else 0,
                 "thumbUrl": "", "creativeId": f"cr{n}", "permalink": "", "previewLink": "",
                 "m": {"spend": round(spend, 2), "impr": impr, "reach": int(impr * 0.7), "clicks": clicks, "linkClicks": clicks * 0.8,
